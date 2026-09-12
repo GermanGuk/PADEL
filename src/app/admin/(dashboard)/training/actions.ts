@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { verifyAdmin } from "@/lib/supabase/dal";
-import type { PricingRow } from "@/lib/content";
+import { requireAdmin } from "@/lib/auth";
+import { createPricingPlan, deletePricingPlan, updatePricingPlan } from "@/lib/data/pricing";
+import type { PricingRow } from "@/lib/db-types";
 
-const MAX_ROWS = 3;
+const MAX_ROWS = 5;
 
 function buildRows(formData: FormData): PricingRow[] {
   const rows: PricingRow[] = [];
@@ -25,34 +25,31 @@ function fields(formData: FormData) {
     title: String(formData.get("title") ?? ""),
     description: String(formData.get("description") ?? ""),
     price: String(formData.get("price") ?? ""),
-    icon: String(formData.get("icon") ?? "solo"),
+    icon: (String(formData.get("icon") ?? "solo") as "solo" | "group"),
     rows: buildRows(formData),
-    sort_order: Number(formData.get("sort_order") ?? 0),
+    sortOrder: Number(formData.get("sort_order") ?? 0),
   };
 }
 
 export async function createPlan(formData: FormData) {
-  await verifyAdmin();
-  const supabase = await createClient();
-  await supabase.from("pricing_plans").insert(fields(formData));
+  await requireAdmin();
+  await createPricingPlan(fields(formData));
   revalidatePath("/admin/training");
   revalidatePath("/");
 }
 
 export async function updatePlan(formData: FormData) {
-  await verifyAdmin();
+  await requireAdmin();
   const id = String(formData.get("id"));
-  const supabase = await createClient();
-  await supabase.from("pricing_plans").update(fields(formData)).eq("id", id);
+  await updatePricingPlan(id, fields(formData));
   revalidatePath("/admin/training");
   revalidatePath("/");
 }
 
 export async function deletePlan(formData: FormData) {
-  await verifyAdmin();
+  await requireAdmin();
   const id = String(formData.get("id"));
-  const supabase = await createClient();
-  await supabase.from("pricing_plans").delete().eq("id", id);
+  await deletePricingPlan(id);
   revalidatePath("/admin/training");
   revalidatePath("/");
 }

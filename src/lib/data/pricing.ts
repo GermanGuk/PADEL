@@ -1,31 +1,50 @@
-import { createClient } from "@/lib/supabase/server";
-import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { pricingPlans as fallbackPlans, type PricingPlan } from "@/lib/content";
+import "server-only";
+import { randomUUID } from "crypto";
+import { readDb, writeDb } from "@/lib/mock-store";
+import type { DbTrainingPlan } from "@/lib/db-types";
+import type { PricingPlan } from "@/lib/content";
 
-export type DbPricingPlan = PricingPlan & { id: string; sort_order: number };
-
-export async function getPricingPlans(): Promise<PricingPlan[]> {
-  if (!isSupabaseConfigured) return fallbackPlans;
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("pricing_plans").select("*").order("sort_order");
-
-  if (error || !data || data.length === 0) return fallbackPlans;
-
-  return data.map((row) => ({
-    dark: row.dark ?? undefined,
+function toPricingPlan(row: DbTrainingPlan): PricingPlan {
+  return {
+    dark: row.dark || undefined,
     number: row.number,
     title: row.title,
     description: row.description,
     price: row.price,
     icon: row.icon,
-    rows: row.rows ?? [],
-  }));
+    rows: row.rows,
+  };
 }
 
-export async function getPricingPlansForAdmin(): Promise<DbPricingPlan[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("pricing_plans").select("*").order("sort_order");
-  if (error || !data) return [];
-  return data as DbPricingPlan[];
+function sorted(plans: DbTrainingPlan[]): DbTrainingPlan[] {
+  return [...plans].sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export async function getPricingPlans(): Promise<PricingPlan[]> {
+  const db = await readDb();
+  return sorted(db.trainingPlans).map(toPricingPlan);
+}
+
+export async function getPricingPlansForAdmin(): Promise<DbTrainingPlan[]> {
+  const db = await readDb();
+  return sorted(db.trainingPlans);
+}
+
+export async function createPricingPlan(data: Omit<DbTrainingPlan, "id">): Promise<void> {
+  const db = await readDb();
+  db.trainingPlans.push({ ...data, id: randomUUID() });
+  await writeDb(db);
+}
+
+export async function updatePricingPlan(id: string, data: Omit<DbTrainingPlan, "id">): Promise<void> {
+  const db = await readDb();
+  const idx = db.trainingPlans.findIndex((p) => p.id === id);
+  if (idx !== -1) db.trainingPlans[idx] = { ...data, id };
+  await writeDb(db);
+}
+
+export async function deletePricingPlan(id: string): Promise<void> {
+  const db = await readDb();
+  db.trainingPlans = db.trainingPlans.filter((p) => p.id !== id);
+  await writeDb(db);
 }

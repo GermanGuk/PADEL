@@ -1,24 +1,19 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { verifyAdmin } from "@/lib/supabase/dal";
+import { requireAdmin } from "@/lib/auth";
 import { logout } from "./actions";
 
 const NAV = [
   { href: "/admin", label: "Дашборд" },
-  { href: "/admin/games", label: "Игры" },
+  { href: "/admin/games", label: "Игры и турниры" },
   { href: "/admin/training", label: "Тренировки" },
   { href: "/admin/gallery", label: "Галерея" },
   { href: "/admin/journal", label: "Журнал" },
-  { href: "/admin/texts", label: "Тексты" },
+  { href: "/admin/seo", label: "SEO" },
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  if (!isSupabaseConfigured) {
-    redirect("/admin/login");
-  }
-  await verifyAdmin();
+  await requireAdmin();
 
   return (
     <div className="flex min-h-screen">

@@ -1,11 +1,13 @@
 import { getPricingPlansForAdmin } from "@/lib/data/pricing";
-import type { PricingRow } from "@/lib/content";
+import type { PricingRow } from "@/lib/db-types";
 import { createPlan, deletePlan, updatePlan } from "./actions";
+
+const MAX_ROWS = 5;
 
 function RowInputs({ rows }: { rows: PricingRow[] }) {
   return (
     <div className="flex flex-col gap-2">
-      {[0, 1, 2].map((i) => {
+      {Array.from({ length: MAX_ROWS }, (_, i) => {
         const row = rows[i];
         return (
           <div key={i} className="grid grid-cols-3 gap-2">
@@ -76,13 +78,13 @@ export default async function TrainingAdminPage() {
                 <input
                   name="sort_order"
                   type="number"
-                  defaultValue={plan.sort_order}
+                  defaultValue={plan.sortOrder}
                   className="rounded-lg border border-line px-2.5 py-1.5 text-sm"
                 />
               </label>
             </div>
 
-            <p className="text-xs font-medium text-grey-1">Пакеты (до 3 строк, пустые игнорируются)</p>
+            <p className="text-xs font-medium text-grey-1">Пакеты тренировок (пустые строки игнорируются)</p>
             <RowInputs rows={plan.rows} />
 
             <label className="flex w-fit items-center gap-2 text-xs text-grey-1">
@@ -140,7 +142,7 @@ export default async function TrainingAdminPage() {
               <input name="sort_order" type="number" defaultValue={plans.length} className="rounded-lg border border-line px-2.5 py-1.5 text-sm" />
             </label>
           </div>
-          <p className="text-xs font-medium text-grey-1">Пакеты (до 3 строк, пустые игнорируются)</p>
+          <p className="text-xs font-medium text-grey-1">Пакеты тренировок (пустые строки игнорируются)</p>
           <RowInputs rows={[]} />
           <label className="flex w-fit items-center gap-2 text-xs text-grey-1">
             <input type="checkbox" name="dark" />

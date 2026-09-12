@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { CursorDot } from "@/components/ui/CursorDot";
+import { getSettings } from "@/lib/data/settings";
 import "./globals.css";
 
 const inter = Inter({
@@ -10,10 +11,15 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Top Padel Alicante",
-  description: "Падел-клуб в Аликанте: тренировки, турниры, сообщество игроков.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+
+  return {
+    title: settings.seoTitle,
+    description: settings.seoDescription,
+    icons: settings.faviconUrl ? { icon: settings.faviconUrl } : undefined,
+  };
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

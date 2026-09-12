@@ -1,23 +1,44 @@
-import { createClient } from "@/lib/supabase/server";
-import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { galleryImages as fallbackImages } from "@/lib/content";
+import "server-only";
+import { randomUUID } from "crypto";
+import { readDb, writeDb } from "@/lib/mock-store";
+import type { DbGalleryImage } from "@/lib/db-types";
 
-export type DbGalleryImage = { id: string; url: string; sort_order: number };
+export type GalleryImage = { id: string; url: string; categoryId: string | null };
 
-export async function getGalleryImages(): Promise<string[]> {
-  if (!isSupabaseConfigured) return fallbackImages;
+function sorted(images: DbGalleryImage[]): DbGalleryImage[] {
+  return [...images].sort((a, b) => a.sortOrder - b.sortOrder);
+}
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("gallery_images").select("*").order("sort_order");
-
-  if (error || !data || data.length === 0) return fallbackImages;
-
-  return data.map((row) => row.url);
+export async function getGalleryImages(): Promise<GalleryImage[]> {
+  const db = await readDb();
+  return sorted(db.galleryImages).map(({ id, url, categoryId }) => ({ id, url, categoryId }));
 }
 
 export async function getGalleryImagesForAdmin(): Promise<DbGalleryImage[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("gallery_images").select("*").order("sort_order");
-  if (error || !data) return [];
-  return data as DbGalleryImage[];
+  const db = await readDb();
+  return sorted(db.galleryImages);
+}
+
+export async function createGalleryImage(data: Omit<DbGalleryImage, "id">): Promise<void> {
+  const db = await readDb();
+  db.galleryImages.push({ ...data, id: randomUUID() });
+  await writeDb(db);
+}
+
+export async function updateGalleryImage(
+  id: string,
+  data: Partial<Omit<DbGalleryImage, "id">>
+): Promise<void> {
+  const db = await readDb();
+  const image = db.galleryImages.find((i) => i.id === id);
+  if (image) Object.assign(image, data);
+  await writeDb(db);
+}
+
+export async function deleteGalleryImage(id: string): Promise<DbGalleryImage | undefined> {
+  const db = await readDb();
+  const image = db.galleryImages.find((i) => i.id === id);
+  db.galleryImages = db.galleryImages.filter((i) => i.id !== id);
+  await writeDb(db);
+  return image;
 }

@@ -1,0 +1,149 @@
+{
+  "games": [
+    {
+      "id": "game-1",
+      "featured": true,
+      "badge": "19 сентября · Суббота",
+      "title": "Mexicano El Salt",
+      "meta": [
+        { "icon": "players", "text": "20 игроков" },
+        { "icon": "courts", "text": "4 корта" },
+        { "icon": "clock", "text": "19:30–21:30" },
+        { "icon": "location", "text": "El Salt" }
+      ],
+      "extra": null,
+      "price": "15 €",
+      "image": "/images/games/featured.png",
+      "sortOrder": 0
+    },
+    {
+      "id": "game-2",
+      "featured": false,
+      "badge": "22 сентября · Вторник",
+      "title": "Americano Teams-",
+      "meta": [
+        { "icon": "players", "text": "6 пар" },
+        { "icon": "courts", "text": "3 корта" },
+        { "icon": "clock", "text": "19:00–22:00" },
+        { "icon": "location", "text": "El Salt" }
+      ],
+      "extra": null,
+      "price": null,
+      "image": null,
+      "sortOrder": 1
+    },
+    {
+      "id": "game-3",
+      "featured": false,
+      "badge": "25 сентября · Пятница",
+      "title": "Americano 1100+",
+      "meta": [
+        { "icon": "players", "text": "6 пар" },
+        { "icon": "courts", "text": "3 корта" },
+        { "icon": "clock", "text": "19:00–22:00" },
+        { "icon": "location", "text": "El Salt" }
+      ],
+      "extra": null,
+      "price": "18 €",
+      "image": null,
+      "sortOrder": 2
+    },
+    {
+      "id": "game-4",
+      "featured": false,
+      "badge": "30 сентября · Среда",
+      "title": "Микст Ж+М",
+      "meta": [
+        { "icon": "players", "text": "8 пар" },
+        { "icon": "courts", "text": "4 корта" },
+        { "icon": "clock", "text": "20:00–22:00" },
+        { "icon": "location", "text": "Essence Padel Club" }
+      ],
+      "extra": null,
+      "price": "15 €",
+      "image": null,
+      "sortOrder": 3
+    }
+  ],
+  "trainingPlans": [
+    {
+      "id": "plan-1",
+      "dark": false,
+      "number": "01.",
+      "title": "Индивидуальные тренировки",
+      "description": "Персональная работа с тренером только над твоей игрой.",
+      "price": "30 €",
+      "icon": "solo",
+      "rows": [
+        { "label": "4 тренировки", "oldPrice": "120 €", "newPrice": "100 €" },
+        { "label": "8 тренировок", "oldPrice": "240 €", "newPrice": "180 €" }
+      ],
+      "sortOrder": 0
+    },
+    {
+      "id": "plan-2",
+      "dark": true,
+      "number": "02.",
+      "title": "Групповая тренировка",
+      "description": "Тренируйся в команде с игроками своего уровня.",
+      "price": "40 €",
+      "icon": "group",
+      "rows": [
+        { "label": "4 тренировки", "oldPrice": "160 €", "newPrice": "140 €" },
+        { "label": "8 тренировки", "oldPrice": "320 €", "newPrice": "260 €" }
+      ],
+      "sortOrder": 1
+    }
+  ],
+  "galleryCategories": [
+    { "id": "gcat-training", "name": "Тренировки" },
+    { "id": "gcat-tournaments", "name": "Турниры" },
+    { "id": "gcat-academy", "name": "Top Padel Academy" }
+  ],
+  "galleryImages": [
+    { "id": "gimg-1", "url": "/images/gallery/1.png", "categoryId": "gcat-tournaments", "sortOrder": 0 },
+    { "id": "gimg-2", "url": "/images/gallery/2.png", "categoryId": "gcat-training", "sortOrder": 1 },
+    { "id": "gimg-3", "url": "/images/gallery/3.png", "categoryId": "gcat-academy", "sortOrder": 2 },
+    { "id": "gimg-4", "url": "/images/gallery/4.png", "categoryId": "gcat-training", "sortOrder": 3 },
+    { "id": "gimg-5", "url": "/images/gallery/5.png", "categoryId": "gcat-tournaments", "sortOrder": 4 },
+    { "id": "gimg-6", "url": "/images/gallery/6.png", "categoryId": "gcat-academy", "sortOrder": 5 },
+    { "id": "gimg-7", "url": "/images/gallery/7.png", "categoryId": "gcat-training", "sortOrder": 6 },
+    { "id": "gimg-8", "url": "/images/gallery/8.png", "categoryId": "gcat-tournaments", "sortOrder": 7 }
+  ],
+  "journalCategories": [
+    { "id": "jcat-tips", "name": "Советы" },
+    { "id": "jcat-training", "name": "Тренировки" },
+    { "id": "jcat-tournaments", "name": "Турниры" }
+  ],
+  "articles": [
+    {
+      "id": "article-1",
+      "title": "Как подобрать правильную ракетку для падела",
+      "categoryId": "jcat-tips",
+      "slug": "kak-podobrat-pravilnuyu-raketku-dlya-padela",
+      "cover": "/images/journal/article-1.png",
+      "body": "Ракетка для падела — это не про \"дороже значит лучше\". Важнее вес, баланс и форма под твой уровень и стиль игры. Новичкам обычно подходят более лёгкие ракетки круглой формы — они прощают неточное попадание в мяч. Игрокам с опытом — ракетки слезовидной или ромбовидной формы, которые дают больше мощности в удар.\n\nПеред покупкой лучше взять ракетку на пробную тренировку: почувствовать вес в руке и то, как она отзывается на удар, важнее любых характеристик на бумаге.",
+      "seoTitle": "Как выбрать ракетку для падела — гид для новичков",
+      "seoDescription": "Разбираем, как выбрать ракетку для падела по форме, весу и балансу — с учётом уровня и стиля игры.",
+      "published": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "article-2",
+      "title": "Где поиграть в падел в Аликанте: площадки и клубы",
+      "categoryId": "jcat-tips",
+      "slug": "gde-poigrat-v-padel-v-alikante-ploschadki-i-kluby",
+      "cover": "/images/journal/article-2.png",
+      "body": "Аликанте — один из центров падела на побережье Коста Бланка: десятки крытых и открытых кортов в шаговой доступности от центра города. Мы собрали площадки, где регулярно играет наше сообщество, и где проще всего найти партнёра на игру даже если ты приехал в город впервые.\n\nБольшинство клубов принимают гостей без абонемента — можно просто забронировать корт на час. Если хочешь сразу попасть в компанию, лучше приходить на организованные игры из нашего расписания.",
+      "seoTitle": "Где поиграть в падел в Аликанте — площадки и клубы",
+      "seoDescription": "Обзор площадок и клубов для падела в Аликанте: где забронировать корт и где проще найти партнёра для игры.",
+      "published": true,
+      "sortOrder": 1
+    }
+  ],
+  "settings": {
+    "seoTitle": "Top Padel Alicante",
+    "seoDescription": "Падел-клуб в Аликанте: тренировки, турниры, сообщество игроков.",
+    "faviconUrl": null
+  }
+}

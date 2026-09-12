@@ -10,10 +10,10 @@ export function Hero({ cards = heroCards, texts = fallbackTexts }: HeroProps) {
   return (
     <section
       id="top"
-      className="container-page flex min-h-[calc(100svh-64px)] flex-col justify-center gap-10 py-8 md:min-h-[calc(100svh-84px)] md:gap-14"
+      className="container-page flex min-h-[100svh] flex-col justify-center gap-10 py-8 md:gap-14 lg:min-h-[calc(100svh-84px)]"
     >
       <Reveal className="flex flex-col items-center gap-6 text-center md:gap-8" y={28}>
-        <h1 className="h1-fluid max-w-[1200px] font-extrabold text-ink">
+        <h1 className="hero-h1 max-w-[1200px] font-extrabold text-ink">
           {texts["hero.title.line1"]}
           <br />
           {texts["hero.title.line2"]}
@@ -27,7 +27,7 @@ export function Hero({ cards = heroCards, texts = fallbackTexts }: HeroProps) {
         </div>
       </Reveal>
 
-      <div className="scroll-row -mx-[clamp(20px,4vw,65px)] flex snap-x snap-mandatory gap-4 overflow-x-auto px-[clamp(20px,4vw,65px)] xl:mx-0 xl:snap-none xl:gap-4 xl:overflow-visible xl:px-0">
+      <div className="scroll-row -mx-[clamp(20px,4vw,65px)] flex snap-x snap-mandatory gap-4 overflow-x-auto px-[clamp(20px,4vw,65px)] scroll-pl-[clamp(20px,4vw,65px)] xl:mx-0 xl:snap-none xl:gap-4 xl:overflow-visible xl:px-0 xl:scroll-pl-0">
         {cards.map((card, i) => (
           <a
             key={card.title}

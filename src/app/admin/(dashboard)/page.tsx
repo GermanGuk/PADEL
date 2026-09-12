@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 const CARDS = [
-  { href: "/admin/games", label: "Игры", desc: "Расписание ближайших игр и турниров" },
-  { href: "/admin/training", label: "Тренировки", desc: "Тарифы и цены на тренировки" },
-  { href: "/admin/gallery", label: "Галерея", desc: "Фото на сайте" },
-  { href: "/admin/journal", label: "Журнал", desc: "Статьи блога" },
-  { href: "/admin/texts", label: "Тексты", desc: "Заголовки и описания на сайте" },
+  { href: "/admin/games", label: "Игры и турниры", desc: "Расписание ближайших игр и турниров" },
+  { href: "/admin/training", label: "Тренировки", desc: "Тарифы и пакеты тренировок" },
+  { href: "/admin/gallery", label: "Галерея", desc: "Фото на сайте по категориям" },
+  { href: "/admin/journal", label: "Журнал", desc: "Статьи блога и их категории" },
+  { href: "/admin/seo", label: "SEO", desc: "Заголовок, описание и favicon сайта" },
 ];
 
 export default function AdminDashboard() {

@@ -27,7 +27,14 @@
 }
 
 :root {
-  --header-h: 84px;
+  /* mobile header is a floating button, not a bar — no scroll offset needed */
+  --header-h: 0px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-h: 84px;
+  }
 }
 
 * {
@@ -48,6 +55,19 @@ body {
 .h1-fluid {
   font-size: clamp(2.25rem, 1.46rem + 3.24vw, 4.375rem); /* 36px -> 70px */
   line-height: 1.08;
+}
+
+/* Hero H1 only: smaller mobile-only scale so the headline fits 3-4 lines
+   instead of 6; identical to .h1-fluid from 1024px up (desktop untouched). */
+.hero-h1 {
+  font-size: clamp(1.5rem, 0.87rem + 2.9vw, 2.75rem); /* 24px -> 44px, mobile/tablet only */
+  line-height: 1.15;
+}
+@media (min-width: 1024px) {
+  .hero-h1 {
+    font-size: clamp(2.25rem, 1.46rem + 3.24vw, 4.375rem);
+    line-height: 1.08;
+  }
 }
 
 .h2-fluid {

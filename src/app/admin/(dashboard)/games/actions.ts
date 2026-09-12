@@ -1,19 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { verifyAdmin } from "@/lib/supabase/dal";
-import type { GameCardMeta } from "@/lib/content";
+import { requireAdmin } from "@/lib/auth";
+import { createGame, deleteGame, updateGame } from "@/lib/data/games";
+import { saveUploadedFile, deleteUploadedFile } from "@/lib/upload";
+import type { GameMeta } from "@/lib/db-types";
 
-const META_ICONS: GameCardMeta["icon"][] = ["players", "courts", "clock", "location"];
+const META_ICONS: GameMeta["icon"][] = ["players", "courts", "clock", "location"];
 
-function buildMeta(formData: FormData): GameCardMeta[] {
+function buildMeta(formData: FormData): GameMeta[] {
   return META_ICONS.map((icon) => ({ icon, text: String(formData.get(icon) ?? "").trim() })).filter(
     (m) => m.text.length > 0
   );
 }
 
-function fields(formData: FormData) {
+async function fields(formData: FormData, existingImage: string | null) {
+  const file = formData.get("file");
+  const image = file instanceof File && file.size > 0 ? await saveUploadedFile(file, "games") : existingImage;
+
   return {
     featured: formData.get("featured") === "on",
     badge: String(formData.get("badge") ?? ""),
@@ -21,33 +25,32 @@ function fields(formData: FormData) {
     meta: buildMeta(formData),
     extra: String(formData.get("extra") ?? "").trim() || null,
     price: String(formData.get("price") ?? "").trim() || null,
-    image: String(formData.get("image") ?? "").trim() || null,
-    sort_order: Number(formData.get("sort_order") ?? 0),
+    image,
+    sortOrder: Number(formData.get("sort_order") ?? 0),
   };
 }
 
-export async function createGame(formData: FormData) {
-  await verifyAdmin();
-  const supabase = await createClient();
-  await supabase.from("games").insert(fields(formData));
+export async function createGameAction(formData: FormData) {
+  await requireAdmin();
+  await createGame(await fields(formData, null));
   revalidatePath("/admin/games");
   revalidatePath("/");
 }
 
-export async function updateGame(formData: FormData) {
-  await verifyAdmin();
+export async function updateGameAction(formData: FormData) {
+  await requireAdmin();
   const id = String(formData.get("id"));
-  const supabase = await createClient();
-  await supabase.from("games").update(fields(formData)).eq("id", id);
+  const existingImage = String(formData.get("existing_image") ?? "") || null;
+  await updateGame(id, await fields(formData, existingImage));
   revalidatePath("/admin/games");
   revalidatePath("/");
 }
 
-export async function deleteGame(formData: FormData) {
-  await verifyAdmin();
+export async function deleteGameAction(formData: FormData) {
+  await requireAdmin();
   const id = String(formData.get("id"));
-  const supabase = await createClient();
-  await supabase.from("games").delete().eq("id", id);
+  const game = await deleteGame(id);
+  if (game?.image) await deleteUploadedFile(game.image);
   revalidatePath("/admin/games");
   revalidatePath("/");
 }

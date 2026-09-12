@@ -1,64 +1,69 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { verifyAdmin } from "@/lib/supabase/dal";
+import { requireAdmin } from "@/lib/auth";
+import { createArticle, deleteArticle, isSlugTaken, updateArticle } from "@/lib/data/articles";
+import { saveUploadedFile, deleteUploadedFile } from "@/lib/upload";
+import { slugify } from "@/lib/slug";
 
-async function uploadIfProvided(formData: FormData): Promise<string | null> {
+async function uniqueSlug(title: string, requestedSlug: string, excludeId?: string): Promise<string> {
+  const base = slugify(requestedSlug || title) || "article";
+  let candidate = base;
+  let i = 2;
+  while (await isSlugTaken(candidate, excludeId)) {
+    candidate = `${base}-${i}`;
+    i += 1;
+  }
+  return candidate;
+}
+
+async function fields(formData: FormData, existingCover: string | null, excludeId?: string) {
+  const title = String(formData.get("title") ?? "").trim();
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return null;
+  const cover = file instanceof File && file.size > 0 ? await saveUploadedFile(file, "journal") : existingCover;
 
-  const supabase = await createClient();
-  const path = `journal/${Date.now()}-${file.name}`;
-  const { error } = await supabase.storage.from("photos").upload(path, file);
-  if (error) return null;
+  const seoTitle = String(formData.get("seo_title") ?? "").trim() || title;
+  const seoDescription = String(formData.get("seo_description") ?? "").trim();
 
-  const { data } = supabase.storage.from("photos").getPublicUrl(path);
-  return data.publicUrl;
-}
-
-export async function createArticle(formData: FormData) {
-  await verifyAdmin();
-  const uploadedUrl = await uploadIfProvided(formData);
-  const image = uploadedUrl ?? String(formData.get("image") ?? "").trim();
-  if (!image) return;
-
-  const supabase = await createClient();
-  await supabase.from("articles").insert({
-    number: String(formData.get("number") ?? ""),
-    tag: String(formData.get("tag") ?? ""),
-    title: String(formData.get("title") ?? ""),
-    image,
-    sort_order: Number(formData.get("sort_order") ?? 0),
-  });
-  revalidatePath("/admin/journal");
-  revalidatePath("/");
-}
-
-export async function updateArticle(formData: FormData) {
-  await verifyAdmin();
-  const id = String(formData.get("id"));
-  const uploadedUrl = await uploadIfProvided(formData);
-
-  const supabase = await createClient();
-  const update: Record<string, string | number> = {
-    number: String(formData.get("number") ?? ""),
-    tag: String(formData.get("tag") ?? ""),
-    title: String(formData.get("title") ?? ""),
-    sort_order: Number(formData.get("sort_order") ?? 0),
+  return {
+    title,
+    categoryId: String(formData.get("category_id") ?? "").trim() || null,
+    slug: await uniqueSlug(title, String(formData.get("slug") ?? ""), excludeId),
+    cover: cover ?? "",
+    body: String(formData.get("body") ?? ""),
+    seoTitle,
+    seoDescription,
+    published: formData.get("published") === "on",
+    sortOrder: Number(formData.get("sort_order") ?? 0),
   };
-  if (uploadedUrl) update.image = uploadedUrl;
+}
 
-  await supabase.from("articles").update(update).eq("id", id);
+export async function createArticleAction(formData: FormData) {
+  await requireAdmin();
+  const data = await fields(formData, null);
+  if (!data.title || !data.cover) return;
+  await createArticle(data);
   revalidatePath("/admin/journal");
   revalidatePath("/");
 }
 
-export async function deleteArticle(formData: FormData) {
-  await verifyAdmin();
+export async function updateArticleAction(formData: FormData) {
+  await requireAdmin();
   const id = String(formData.get("id"));
-  const supabase = await createClient();
-  await supabase.from("articles").delete().eq("id", id);
+  const existingCover = String(formData.get("existing_cover") ?? "") || null;
+  const data = await fields(formData, existingCover, id);
+  if (!data.title || !data.cover) return;
+  await updateArticle(id, data);
+  revalidatePath("/admin/journal");
+  revalidatePath(`/journal/${data.slug}`);
+  revalidatePath("/");
+}
+
+export async function deleteArticleAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const article = await deleteArticle(id);
+  if (article?.cover) await deleteUploadedFile(article.cover);
   revalidatePath("/admin/journal");
   revalidatePath("/");
 }

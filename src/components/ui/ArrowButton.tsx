@@ -1,3 +1,5 @@
+import type { MouseEvent } from "react";
+
 type ArrowButtonProps = {
   variant?: "dark" | "light" | "lime" | "outline-light";
   size?: number;
@@ -6,6 +8,7 @@ type ArrowButtonProps = {
   href?: string;
   /** Invert/animate when an ancestor with the `group` class is hovered, instead of only on its own hover. */
   groupHover?: boolean;
+  onClick?: (e: MouseEvent) => void;
 };
 
 const VARIANT_CLASSES: Record<NonNullable<ArrowButtonProps["variant"]>, string> = {
@@ -26,6 +29,7 @@ export function ArrowButton({
   className = "",
   href,
   groupHover = false,
+  onClick,
 }: ArrowButtonProps) {
   let interactive = "";
   if (variant === "dark") interactive = groupHover ? DARK_INVERT_GROUP : DARK_INVERT_OWN;
@@ -37,7 +41,7 @@ export function ArrowButton({
 
   if (href) {
     return (
-      <a href={href} className={classes} style={style} aria-label="Подробнее">
+      <a href={href} className={classes} style={style} aria-label="Подробнее" onClick={onClick}>
         {glyph}
       </a>
     );

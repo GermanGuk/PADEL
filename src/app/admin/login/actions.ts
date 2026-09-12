@@ -1,24 +1,21 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { checkPassword, createAdminSession } from "@/lib/auth";
 
 export type LoginState = { error?: string } | undefined;
 
 export async function login(_state: LoginState, formData: FormData): Promise<LoginState> {
-  const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
 
-  if (!email || !password) {
-    return { error: "Введите email и пароль." };
+  if (!password) {
+    return { error: "Введите пароль." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    return { error: "Неверный email или пароль." };
+  if (!checkPassword(password)) {
+    return { error: "Неверный пароль." };
   }
 
+  await createAdminSession();
   redirect("/admin");
 }
