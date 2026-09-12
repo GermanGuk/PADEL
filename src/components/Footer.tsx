@@ -89,9 +89,13 @@ export function Footer({
       <div className="flex flex-col gap-3 py-1.5 text-xs text-grey-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-semibold">© 2026 Top Padel Alicante</p>
         <div className="flex items-center gap-2">
-          <span>Политика конфиденциальности</span>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-ink">
+            Политика конфиденциальности
+          </a>
           <span className="size-[3px] rounded-full bg-lime" />
-          <span>Cookies</span>
+          <a href="/cookies" target="_blank" rel="noopener noreferrer" className="hover:text-ink">
+            Cookies
+          </a>
         </div>
       </div>
 
