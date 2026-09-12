@@ -55,7 +55,7 @@ export async function getGamesForAdmin(): Promise<DbGame[]> {
 }
 
 export async function createGame(data: Omit<DbGame, "id">): Promise<void> {
-  await supabaseAdmin.from("games").insert({
+  const { error } = await supabaseAdmin.from("games").insert({
     featured: data.featured,
     badge: data.badge,
     title: data.title,
@@ -65,10 +65,11 @@ export async function createGame(data: Omit<DbGame, "id">): Promise<void> {
     image: data.image,
     sort_order: data.sortOrder,
   });
+  if (error) throw new Error(`Failed to create game: ${error.message}`);
 }
 
 export async function updateGame(id: string, data: Omit<DbGame, "id">): Promise<void> {
-  await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("games")
     .update({
       featured: data.featured,
@@ -81,10 +82,12 @@ export async function updateGame(id: string, data: Omit<DbGame, "id">): Promise<
       sort_order: data.sortOrder,
     })
     .eq("id", id);
+  if (error) throw new Error(`Failed to update game: ${error.message}`);
 }
 
 export async function deleteGame(id: string): Promise<DbGame | undefined> {
   const { data } = await supabaseAdmin.from("games").select("*").eq("id", id).maybeSingle();
-  await supabaseAdmin.from("games").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("games").delete().eq("id", id);
+  if (error) throw new Error(`Failed to delete game: ${error.message}`);
   return data ? fromRow(data as Row) : undefined;
 }

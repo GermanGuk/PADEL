@@ -55,7 +55,7 @@ export async function getPricingPlansForAdmin(): Promise<DbTrainingPlan[]> {
 }
 
 export async function createPricingPlan(data: Omit<DbTrainingPlan, "id">): Promise<void> {
-  await supabaseAdmin.from("training_plans").insert({
+  const { error } = await supabaseAdmin.from("training_plans").insert({
     dark: data.dark,
     number: data.number,
     title: data.title,
@@ -65,10 +65,11 @@ export async function createPricingPlan(data: Omit<DbTrainingPlan, "id">): Promi
     rows: data.rows,
     sort_order: data.sortOrder,
   });
+  if (error) throw new Error(`Failed to create pricing plan: ${error.message}`);
 }
 
 export async function updatePricingPlan(id: string, data: Omit<DbTrainingPlan, "id">): Promise<void> {
-  await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("training_plans")
     .update({
       dark: data.dark,
@@ -81,8 +82,10 @@ export async function updatePricingPlan(id: string, data: Omit<DbTrainingPlan, "
       sort_order: data.sortOrder,
     })
     .eq("id", id);
+  if (error) throw new Error(`Failed to update pricing plan: ${error.message}`);
 }
 
 export async function deletePricingPlan(id: string): Promise<void> {
-  await supabaseAdmin.from("training_plans").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("training_plans").delete().eq("id", id);
+  if (error) throw new Error(`Failed to delete pricing plan: ${error.message}`);
 }

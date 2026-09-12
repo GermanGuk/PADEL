@@ -22,10 +22,11 @@ export async function getSettings(): Promise<DbSettings> {
 }
 
 export async function updateSettings(data: DbSettings): Promise<void> {
-  await supabaseAdmin.from("site_settings").upsert({
+  const { error } = await supabaseAdmin.from("site_settings").upsert({
     id: 1,
     seo_title: data.seoTitle,
     seo_description: data.seoDescription,
     favicon_url: data.faviconUrl,
   });
+  if (error) throw new Error(`Failed to update settings: ${error.message}`);
 }

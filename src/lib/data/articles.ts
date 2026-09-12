@@ -81,7 +81,7 @@ export async function isSlugTaken(slug: string, excludeId?: string): Promise<boo
 }
 
 export async function createArticle(data: Omit<DbArticle, "id">): Promise<void> {
-  await supabaseAdmin.from("articles").insert({
+  const { error } = await supabaseAdmin.from("articles").insert({
     title: data.title,
     category_id: data.categoryId,
     slug: data.slug,
@@ -92,10 +92,11 @@ export async function createArticle(data: Omit<DbArticle, "id">): Promise<void> 
     published: data.published,
     sort_order: data.sortOrder,
   });
+  if (error) throw new Error(`Failed to create article: ${error.message}`);
 }
 
 export async function updateArticle(id: string, data: Omit<DbArticle, "id">): Promise<void> {
-  await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("articles")
     .update({
       title: data.title,
@@ -109,10 +110,12 @@ export async function updateArticle(id: string, data: Omit<DbArticle, "id">): Pr
       sort_order: data.sortOrder,
     })
     .eq("id", id);
+  if (error) throw new Error(`Failed to update article: ${error.message}`);
 }
 
 export async function deleteArticle(id: string): Promise<DbArticle | undefined> {
   const { data } = await supabaseAdmin.from("articles").select("*").eq("id", id).maybeSingle();
-  await supabaseAdmin.from("articles").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("articles").delete().eq("id", id);
+  if (error) throw new Error(`Failed to delete article: ${error.message}`);
   return data ? fromRow(data as Row) : undefined;
 }

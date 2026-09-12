@@ -1,9 +1,16 @@
 import "server-only";
+import { revalidatePath } from "next/cache";
 import { InlineKeyboard, type Context } from "grammy";
 import type { Conversation } from "@grammyjs/conversations";
 import { saveUploadedBuffer } from "@/lib/upload";
 import { entities, categoryLinks, mainMenu, settingsFields, getSettingsValues, saveSettingsValue } from "./entities";
 import type { EntityValues, FieldSpec, MyContext } from "./types";
+
+// The homepage is statically cached; bot writes need to bust that cache the
+// same way the web admin's server actions already do.
+function revalidateSite() {
+  revalidatePath("/");
+}
 
 export function mainMenuKeyboard(): InlineKeyboard {
   const kb = new InlineKeyboard();
@@ -73,6 +80,7 @@ export async function performDelete(ctx: Context, key: string, id: string) {
   const entity = entities[key];
   if (!entity) return;
   await entity.remove(id);
+  revalidateSite();
   await ctx.reply("🗑 Удалено.");
   await showList(ctx, key);
 }
@@ -178,7 +186,10 @@ export async function editFieldConversation(
     if (!field) return;
     const values = await conversation.external(() => getSettingsValues());
     const newValue = await promptField(conversation, ctx, field, values[fieldKey]);
-    await conversation.external(() => saveSettingsValue(fieldKey, newValue));
+    await conversation.external(async () => {
+      await saveSettingsValue(fieldKey, newValue);
+      revalidateSite();
+    });
     await ctx.reply("✅ Сохранено.");
     await showSettings(ctx);
     return;
@@ -199,7 +210,10 @@ export async function editFieldConversation(
   const values = entity.valuesOf(item);
   const newValue = await promptField(conversation, ctx, field, values[fieldKey]);
   values[fieldKey] = newValue;
-  await conversation.external(() => entity.update(id, values));
+  await conversation.external(async () => {
+    await entity.update(id, values);
+    revalidateSite();
+  });
   await ctx.reply("✅ Сохранено.");
   await showItem(ctx, key, id);
 }
@@ -217,7 +231,10 @@ export async function addItemConversation(conversation: Conversation<MyContext>,
     values[field.key] = await promptField(conversation, ctx, field, undefined);
   }
 
-  await conversation.external(() => entity.create(values));
+  await conversation.external(async () => {
+    await entity.create(values);
+    revalidateSite();
+  });
   await ctx.reply("✅ Добавлено.");
   await showList(ctx, key);
 }

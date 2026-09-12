@@ -10,13 +10,16 @@ export async function getJournalCategories(): Promise<DbJournalCategory[]> {
 }
 
 export async function createJournalCategory(name: string): Promise<void> {
-  await supabaseAdmin.from("journal_categories").insert({ name });
+  const { error } = await supabaseAdmin.from("journal_categories").insert({ name });
+  if (error) throw new Error(`Failed to create journal category: ${error.message}`);
 }
 
 export async function renameJournalCategory(id: string, name: string): Promise<void> {
-  await supabaseAdmin.from("journal_categories").update({ name }).eq("id", id);
+  const { error } = await supabaseAdmin.from("journal_categories").update({ name }).eq("id", id);
+  if (error) throw new Error(`Failed to rename journal category: ${error.message}`);
 }
 
 export async function deleteJournalCategory(id: string): Promise<void> {
-  await supabaseAdmin.from("journal_categories").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("journal_categories").delete().eq("id", id);
+  if (error) throw new Error(`Failed to delete journal category: ${error.message}`);
 }

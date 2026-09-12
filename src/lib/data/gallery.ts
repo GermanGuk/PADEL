@@ -24,11 +24,12 @@ export async function getGalleryImagesForAdmin(): Promise<DbGalleryImage[]> {
 }
 
 export async function createGalleryImage(data: Omit<DbGalleryImage, "id">): Promise<void> {
-  await supabaseAdmin.from("gallery_images").insert({
+  const { error } = await supabaseAdmin.from("gallery_images").insert({
     url: data.url,
     category_id: data.categoryId,
     sort_order: data.sortOrder,
   });
+  if (error) throw new Error(`Failed to create gallery image: ${error.message}`);
 }
 
 export async function updateGalleryImage(
@@ -40,11 +41,13 @@ export async function updateGalleryImage(
   if (data.categoryId !== undefined) update.category_id = data.categoryId;
   if (data.sortOrder !== undefined) update.sort_order = data.sortOrder;
 
-  await supabaseAdmin.from("gallery_images").update(update).eq("id", id);
+  const { error } = await supabaseAdmin.from("gallery_images").update(update).eq("id", id);
+  if (error) throw new Error(`Failed to update gallery image: ${error.message}`);
 }
 
 export async function deleteGalleryImage(id: string): Promise<DbGalleryImage | undefined> {
   const { data } = await supabaseAdmin.from("gallery_images").select("*").eq("id", id).maybeSingle();
-  await supabaseAdmin.from("gallery_images").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("gallery_images").delete().eq("id", id);
+  if (error) throw new Error(`Failed to delete gallery image: ${error.message}`);
   return data ? fromRow(data as Row) : undefined;
 }
