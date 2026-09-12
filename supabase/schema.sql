@@ -74,13 +74,16 @@ create table if not exists articles (
   created_at timestamptz not null default now()
 );
 
--- ── Site-wide SEO (homepage title/description + favicon) ────────────
+-- ── Site-wide SEO (homepage title/description + favicon) and social links ──
 -- Singleton row: always id = 1.
 create table if not exists site_settings (
   id smallint primary key default 1 check (id = 1),
   seo_title text not null,
   seo_description text not null,
-  favicon_url text
+  favicon_url text,
+  telegram_url text,
+  instagram_url text,
+  whatsapp_url text
 );
 
 -- ── Row Level Security: public read, no anon/authenticated writes ───
@@ -207,6 +210,6 @@ from (values
 join seeded_journal_categories c on c.name = v.category_name
 where not exists (select 1 from articles);
 
-insert into site_settings (id, seo_title, seo_description, favicon_url)
-select 1, 'Top Padel Alicante', 'Падел-клуб в Аликанте: тренировки, турниры, сообщество игроков.', null
+insert into site_settings (id, seo_title, seo_description, favicon_url, telegram_url, instagram_url, whatsapp_url)
+select 1, 'Top Padel Alicante', 'Падел-клуб в Аликанте: тренировки, турниры, сообщество игроков.', null, '#', '#', '#'
 where not exists (select 1 from site_settings);

@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { navLinks, siteLinks } from "@/lib/content";
 
-export function Header() {
+type HeaderProps = { telegramUrl?: string };
+
+export function Header({ telegramUrl = siteLinks.telegram }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [pastThreshold, setPastThreshold] = useState(false);
@@ -54,7 +56,7 @@ export function Header() {
           </nav>
 
           <a
-            href={siteLinks.telegram}
+            href={telegramUrl}
             className="inline-flex items-center gap-2 rounded-full bg-lime-bright px-[18px] py-2.5 text-sm font-medium text-ink transition-transform hover:scale-[1.03]"
           >
             <Image src="/images/icons/telegram-fill.svg" alt="" width={12} height={11} />
@@ -101,7 +103,7 @@ export function Header() {
                 </a>
               ))}
               <a
-                href={siteLinks.telegram}
+                href={telegramUrl}
                 onClick={() => setOpen(false)}
                 className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-lime-bright px-5 py-2.5 text-sm font-medium text-ink"
               >

@@ -14,10 +14,11 @@ import { getGalleryCategories } from "@/lib/data/gallery-categories";
 import { getGameCards } from "@/lib/data/games";
 import { getJournalCategories } from "@/lib/data/journal-categories";
 import { getPricingPlans } from "@/lib/data/pricing";
+import { getSettings } from "@/lib/data/settings";
 import { getSiteTexts } from "@/lib/data/site-texts";
 
 export default async function Home() {
-  const [games, plans, images, galleryCategories, articles, journalCategories, texts] = await Promise.all([
+  const [games, plans, images, galleryCategories, articles, journalCategories, texts, settings] = await Promise.all([
     getGameCards(),
     getPricingPlans(),
     getGalleryImages(),
@@ -25,6 +26,7 @@ export default async function Home() {
     getArticles(),
     getJournalCategories(),
     getSiteTexts(),
+    getSettings(),
   ]);
 
   // The Hero's "featured game" tile mirrors whichever game is marked
@@ -45,7 +47,7 @@ export default async function Home() {
 
   return (
     <>
-      <Header />
+      <Header telegramUrl={settings.telegramUrl ?? undefined} />
       <main className="flex-1">
         <Hero cards={cards} texts={texts} />
         <WaveDivider />
@@ -55,7 +57,11 @@ export default async function Home() {
         <Community texts={texts} />
         <Journal articles={articles} categories={journalCategories} />
       </main>
-      <Footer />
+      <Footer
+        telegramUrl={settings.telegramUrl ?? undefined}
+        instagramUrl={settings.instagramUrl ?? undefined}
+        whatsappUrl={settings.whatsappUrl ?? undefined}
+      />
     </>
   );
 }

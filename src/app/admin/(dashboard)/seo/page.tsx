@@ -7,7 +7,7 @@ export default async function SeoAdminPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-bold text-ink">SEO и favicon сайта</h1>
+      <h1 className="text-xl font-bold text-ink">SEO, favicon и соцсети</h1>
       <p className="max-w-lg text-sm text-grey-1">
         Title и Description используются на главной странице сайта. У каждой статьи журнала свои
         Title и Description — их можно задать в разделе «Журнал».
@@ -35,6 +35,21 @@ export default async function SeoAdminPage() {
             <input type="file" name="favicon" accept="image/*" />
           </label>
         </div>
+
+        <p className="mt-2 text-xs font-medium text-grey-1">Ссылки на соцсети (шапка и подвал сайта)</p>
+
+        <label className="flex flex-col gap-1 text-xs text-grey-1">
+          Telegram
+          <input name="telegram_url" defaultValue={settings.telegramUrl ?? ""} placeholder="https://t.me/..." className="rounded-lg border border-line px-2.5 py-1.5 text-sm" />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-grey-1">
+          Instagram
+          <input name="instagram_url" defaultValue={settings.instagramUrl ?? ""} placeholder="https://instagram.com/..." className="rounded-lg border border-line px-2.5 py-1.5 text-sm" />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-grey-1">
+          WhatsApp
+          <input name="whatsapp_url" defaultValue={settings.whatsappUrl ?? ""} placeholder="https://wa.me/..." className="rounded-lg border border-line px-2.5 py-1.5 text-sm" />
+        </label>
 
         <button type="submit" className="w-fit rounded-full bg-lime-bright px-5 py-2.5 text-sm font-medium text-ink">
           Сохранить

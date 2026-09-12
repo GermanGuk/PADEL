@@ -57,6 +57,9 @@ export type DbSettings = {
   seoTitle: string;
   seoDescription: string;
   faviconUrl: string | null;
+  telegramUrl: string | null;
+  instagramUrl: string | null;
+  whatsappUrl: string | null;
 };
 
 export type MockDb = {

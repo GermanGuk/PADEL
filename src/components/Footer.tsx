@@ -10,13 +10,23 @@ const CONTACT_ICONS: Record<string, string> = {
   whatsapp: "/images/icons/whatsapp.svg",
 };
 
-const SOCIALS = [
-  { key: "instagram", href: siteLinks.instagram },
-  { key: "telegram", href: siteLinks.telegram },
-  { key: "whatsapp", href: siteLinks.whatsapp },
-];
+type FooterProps = {
+  telegramUrl?: string;
+  instagramUrl?: string;
+  whatsappUrl?: string;
+};
 
-export function Footer() {
+export function Footer({
+  telegramUrl = siteLinks.telegram,
+  instagramUrl = siteLinks.instagram,
+  whatsappUrl = siteLinks.whatsapp,
+}: FooterProps) {
+  const socials = [
+    { key: "instagram", href: instagramUrl },
+    { key: "telegram", href: telegramUrl },
+    { key: "whatsapp", href: whatsappUrl },
+  ];
+
   return (
     <footer id="footer" className="container-page flex flex-col gap-7 overflow-hidden pt-12">
       <div className="h-px w-full bg-line" />
@@ -61,7 +71,7 @@ export function Footer() {
             Сообщество игроков и любителей падела в Аликанте. Играем. Тренируемся. Растём{" "}вместе.
           </p>
           <div className="flex gap-2">
-            {SOCIALS.map((s) => (
+            {socials.map((s) => (
               <a
                 key={s.key}
                 href={s.href}

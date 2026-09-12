@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArticleBySlug } from "@/lib/data/articles";
 import { getJournalCategories } from "@/lib/data/journal-categories";
+import { getSettings } from "@/lib/data/settings";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -25,12 +26,12 @@ export default async function ArticlePage({ params }: PageProps) {
   const article = await getArticleBySlug(slug);
   if (!article) notFound();
 
-  const categories = await getJournalCategories();
+  const [categories, settings] = await Promise.all([getJournalCategories(), getSettings()]);
   const categoryName = categories.find((c) => c.id === article.categoryId)?.name;
 
   return (
     <>
-      <Header />
+      <Header telegramUrl={settings.telegramUrl ?? undefined} />
       <main className="flex-1">
         <article className="container-page section-pad flex flex-col gap-8">
           <Link href="/#journal" className="w-fit text-[13px] font-medium text-ink">
@@ -58,7 +59,11 @@ export default async function ArticlePage({ params }: PageProps) {
           </div>
         </article>
       </main>
-      <Footer />
+      <Footer
+        telegramUrl={settings.telegramUrl ?? undefined}
+        instagramUrl={settings.instagramUrl ?? undefined}
+        whatsappUrl={settings.whatsappUrl ?? undefined}
+      />
     </>
   );
 }

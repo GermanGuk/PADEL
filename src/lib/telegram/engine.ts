@@ -95,6 +95,9 @@ export async function showSettings(ctx: Context) {
   const lines = [
     `Title: ${values.seoTitle}`,
     `Description: ${values.seoDescription || "—"}`,
+    `Telegram: ${values.telegramUrl || "—"}`,
+    `Instagram: ${values.instagramUrl || "—"}`,
+    `WhatsApp: ${values.whatsappUrl || "—"}`,
   ];
   if (values.faviconUrl) {
     await ctx.replyWithPhoto(String(values.faviconUrl), {

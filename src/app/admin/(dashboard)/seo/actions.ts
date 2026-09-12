@@ -20,6 +20,9 @@ export async function saveSettings(formData: FormData) {
     seoTitle: String(formData.get("seo_title") ?? "").trim() || current.seoTitle,
     seoDescription: String(formData.get("seo_description") ?? "").trim(),
     faviconUrl,
+    telegramUrl: String(formData.get("telegram_url") ?? "").trim() || current.telegramUrl,
+    instagramUrl: String(formData.get("instagram_url") ?? "").trim() || current.instagramUrl,
+    whatsappUrl: String(formData.get("whatsapp_url") ?? "").trim() || current.whatsappUrl,
   });
 
   revalidatePath("/admin/seo");

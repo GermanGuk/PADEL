@@ -373,11 +373,21 @@ export const settingsFields: FieldSpec[] = [
   { key: "seoTitle", label: "SEO Title (главная)", type: "text" },
   { key: "seoDescription", label: "SEO Description (главная)", type: "text", optional: true },
   { key: "faviconUrl", label: "Favicon", type: "photo", optional: true, folder: "settings" },
+  { key: "telegramUrl", label: "Ссылка Telegram", type: "text", optional: true },
+  { key: "instagramUrl", label: "Ссылка Instagram", type: "text", optional: true },
+  { key: "whatsappUrl", label: "Ссылка WhatsApp", type: "text", optional: true },
 ];
 
 export async function getSettingsValues(): Promise<EntityValues> {
   const s = await getSettings();
-  return { seoTitle: s.seoTitle, seoDescription: s.seoDescription, faviconUrl: s.faviconUrl };
+  return {
+    seoTitle: s.seoTitle,
+    seoDescription: s.seoDescription,
+    faviconUrl: s.faviconUrl,
+    telegramUrl: s.telegramUrl,
+    instagramUrl: s.instagramUrl,
+    whatsappUrl: s.whatsappUrl,
+  };
 }
 
 export async function saveSettingsValue(field: string, value: string | boolean | null): Promise<void> {
@@ -386,6 +396,9 @@ export async function saveSettingsValue(field: string, value: string | boolean |
   if (field === "seoTitle") next.seoTitle = str(value) || current.seoTitle;
   if (field === "seoDescription") next.seoDescription = str(value);
   if (field === "faviconUrl") next.faviconUrl = orNull(value);
+  if (field === "telegramUrl") next.telegramUrl = orNull(value) ?? current.telegramUrl;
+  if (field === "instagramUrl") next.instagramUrl = orNull(value) ?? current.instagramUrl;
+  if (field === "whatsappUrl") next.whatsappUrl = orNull(value) ?? current.whatsappUrl;
   await updateSettings(next);
 }
 
