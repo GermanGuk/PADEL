@@ -19,26 +19,26 @@ export function WaveDivider() {
           </radialGradient>
         </defs>
         <path
-          d="M-10,45 C8,18 30,74 54,58 C76,44 56,12 92,17 C148,25 172,76 246,55 C296,42 330,22 352,34"
+          d="M-10,45 C8,18 30,74 54,58 C76,44 56,12 92,17 C148,25 172,76 246,55 C270,48 285,42 300,45"
           fill="none"
           stroke="url(#wave-divider-grad)"
           strokeWidth="12"
           strokeLinecap="round"
         />
-        <circle cx="358" cy="32" r="16" fill="url(#wave-ball-grad)" />
+        <circle cx="340" cy="45" r="42" fill="url(#wave-ball-grad)" />
         <path
-          d="M347,22 C353,26 353,38 347,42"
+          d="M311,19 C325,28 325,62 311,71"
           fill="none"
           stroke="#f7f6f2"
-          strokeWidth="1.5"
+          strokeWidth="2.5"
           strokeLinecap="round"
           opacity="0.75"
         />
         <path
-          d="M369,22 C363,26 363,38 369,42"
+          d="M369,19 C355,28 355,62 369,71"
           fill="none"
           stroke="#f7f6f2"
-          strokeWidth="1.5"
+          strokeWidth="2.5"
           strokeLinecap="round"
           opacity="0.75"
         />
