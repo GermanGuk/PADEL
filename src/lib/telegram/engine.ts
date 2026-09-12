@@ -1,0 +1,223 @@
+import "server-only";
+import { InlineKeyboard, type Context } from "grammy";
+import type { Conversation } from "@grammyjs/conversations";
+import { saveUploadedBuffer } from "@/lib/upload";
+import { entities, categoryLinks, mainMenu, settingsFields, getSettingsValues, saveSettingsValue } from "./entities";
+import type { EntityValues, FieldSpec, MyContext } from "./types";
+
+export function mainMenuKeyboard(): InlineKeyboard {
+  const kb = new InlineKeyboard();
+  for (const item of mainMenu) kb.text(item.label, item.key === "seo" ? "seo" : `l:${item.key}`).row();
+  return kb;
+}
+
+export async function showMainMenu(ctx: Context) {
+  await ctx.reply("Админка Top Padel. Выберите раздел:", { reply_markup: mainMenuKeyboard() });
+}
+
+export async function showList(ctx: Context, key: string) {
+  const entity = entities[key];
+  if (!entity) return;
+  const items = await entity.list();
+
+  const kb = new InlineKeyboard();
+  for (const item of items) kb.text(entity.summary(item), `i:${key}:${item.id}`).row();
+  kb.text("➕ Добавить", `a:${key}`).row();
+  if (categoryLinks[key]) kb.text("🏷 Категории", `l:${categoryLinks[key]}`).row();
+  kb.text("🔙 Меню", "m").row();
+
+  await ctx.reply(`${entity.title} (${items.length}):`, { reply_markup: kb });
+}
+
+async function itemKeyboard(key: string, id: string): Promise<InlineKeyboard> {
+  const entity = entities[key];
+  const kb = new InlineKeyboard();
+  for (const field of entity.fields) {
+    kb.text(`✏️ ${field.label}`, `e:${key}:${id}:${field.key}`).row();
+  }
+  kb.text("🗑 Удалить", `d:${key}:${id}`).row();
+  kb.text("🔙 Назад", `l:${key}`).row();
+  return kb;
+}
+
+export async function showItem(ctx: Context, key: string, id: string) {
+  const entity = entities[key];
+  if (!entity) return;
+  const items = await entity.list();
+  const item = items.find((i) => i.id === id);
+  if (!item) {
+    await ctx.reply("Не найдено — возможно, уже удалено.");
+    await showList(ctx, key);
+    return;
+  }
+
+  const kb = await itemKeyboard(key, id);
+  const text = entity.detail(item) || entity.summary(item);
+  const photo = entity.photoOf?.(item);
+
+  if (photo) {
+    await ctx.replyWithPhoto(photo, { caption: text, reply_markup: kb });
+  } else {
+    await ctx.reply(text, { reply_markup: kb });
+  }
+}
+
+export async function showDeleteConfirm(ctx: Context, key: string, id: string) {
+  const kb = new InlineKeyboard()
+    .text("Да, удалить", `dy:${key}:${id}`)
+    .text("Отмена", `i:${key}:${id}`);
+  await ctx.reply("Точно удалить?", { reply_markup: kb });
+}
+
+export async function performDelete(ctx: Context, key: string, id: string) {
+  const entity = entities[key];
+  if (!entity) return;
+  await entity.remove(id);
+  await ctx.reply("🗑 Удалено.");
+  await showList(ctx, key);
+}
+
+// ── SEO (singleton, no list) ────────────────────────────────────────
+export async function showSettings(ctx: Context) {
+  const values = await getSettingsValues();
+  const kb = new InlineKeyboard();
+  for (const field of settingsFields) kb.text(`✏️ ${field.label}`, `e:seo:_:${field.key}`).row();
+  kb.text("🔙 Меню", "m").row();
+
+  const lines = [
+    `Title: ${values.seoTitle}`,
+    `Description: ${values.seoDescription || "—"}`,
+  ];
+  if (values.faviconUrl) {
+    await ctx.replyWithPhoto(String(values.faviconUrl), {
+      caption: lines.join("\n"),
+      reply_markup: kb,
+    });
+  } else {
+    await ctx.reply(lines.join("\n"), { reply_markup: kb });
+  }
+}
+
+// ── Field prompting, shared by "add" and "edit one field" ───────────
+async function promptField(
+  conversation: Conversation<MyContext>,
+  ctx: Context,
+  field: FieldSpec,
+  current: string | boolean | null | undefined
+): Promise<string | boolean | null> {
+  if (field.type === "boolean") {
+    const kb = new InlineKeyboard().text("Да", "v:yes").text("Нет", "v:no");
+    await ctx.reply(`${field.label}?`, { reply_markup: kb });
+    const cbCtx = await conversation.waitForCallbackQuery(["v:yes", "v:no"]);
+    await cbCtx.answerCallbackQuery();
+    return cbCtx.callbackQuery.data === "v:yes";
+  }
+
+  if (field.type === "select") {
+    const options = await conversation.external(() => field.options());
+    const kb = new InlineKeyboard();
+    if (field.optional) kb.text("— без категории —", "v:__none__").row();
+    for (const opt of options) kb.text(opt.label, `v:${opt.value}`).row();
+    if (options.length === 0 && !field.optional) {
+      await ctx.reply(`Нет доступных вариантов для «${field.label}» — сначала создайте хотя бы одну категорию.`);
+      return null;
+    }
+    await ctx.reply(`${field.label}:`, { reply_markup: kb });
+    const cbCtx = await conversation.waitFor("callback_query:data");
+    await cbCtx.answerCallbackQuery();
+    const val = cbCtx.callbackQuery.data.slice(2);
+    return val === "__none__" ? null : val;
+  }
+
+  if (field.type === "photo") {
+    while (true) {
+      await ctx.reply(
+        `${field.label} — пришлите фото${field.optional ? " (или «-» чтобы оставить как есть/пропустить)" : ""}:`
+      );
+      const msgCtx = await conversation.waitFor(["message:photo", "message:text"]);
+      if (msgCtx.message.text === "-") return current === undefined ? null : (current as string | null);
+
+      const photo = msgCtx.message.photo;
+      if (!photo || photo.length === 0) {
+        await ctx.reply("Это не похоже на фото — пришлите именно изображение.");
+        continue;
+      }
+      const largest = photo[photo.length - 1];
+      const file = await ctx.api.getFile(largest.file_id);
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const fileUrl = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
+
+      const uploadedUrl = await conversation.external(async () => {
+        const res = await fetch(fileUrl);
+        const bytes = Buffer.from(await res.arrayBuffer());
+        return saveUploadedBuffer(bytes, "photo.jpg", "image/jpeg", field.folder);
+      });
+      return uploadedUrl;
+    }
+  }
+
+  // text / number
+  await ctx.reply(
+    `${field.label}${current ? ` (сейчас: ${current})` : ""}${field.optional ? " — можно «-» чтобы очистить" : ""}:`
+  );
+  const msgCtx = await conversation.waitFor("message:text");
+  const text = msgCtx.message.text.trim();
+  if (text === "-") return null;
+  return text;
+}
+
+export async function editFieldConversation(
+  conversation: Conversation<MyContext>,
+  ctx: Context,
+  key: string,
+  id: string,
+  fieldKey: string
+) {
+  if (key === "seo") {
+    const field = settingsFields.find((f) => f.key === fieldKey);
+    if (!field) return;
+    const values = await conversation.external(() => getSettingsValues());
+    const newValue = await promptField(conversation, ctx, field, values[fieldKey]);
+    await conversation.external(() => saveSettingsValue(fieldKey, newValue));
+    await ctx.reply("✅ Сохранено.");
+    await showSettings(ctx);
+    return;
+  }
+
+  const entity = entities[key];
+  if (!entity) return;
+  const field = entity.fields.find((f) => f.key === fieldKey);
+  if (!field) return;
+
+  const items = await conversation.external(() => entity.list());
+  const item = items.find((i) => i.id === id);
+  if (!item) {
+    await ctx.reply("Не найдено — возможно, уже удалено.");
+    return;
+  }
+
+  const values = entity.valuesOf(item);
+  const newValue = await promptField(conversation, ctx, field, values[fieldKey]);
+  values[fieldKey] = newValue;
+  await conversation.external(() => entity.update(id, values));
+  await ctx.reply("✅ Сохранено.");
+  await showItem(ctx, key, id);
+}
+
+export async function addItemConversation(conversation: Conversation<MyContext>, ctx: Context, key: string) {
+  const entity = entities[key];
+  if (!entity) return;
+
+  const values: EntityValues = {};
+  for (const field of entity.fields) {
+    if (field.type === "boolean" && field.key === "featured") {
+      values[field.key] = false; // skip asking on create, default off
+      continue;
+    }
+    values[field.key] = await promptField(conversation, ctx, field, undefined);
+  }
+
+  await conversation.external(() => entity.create(values));
+  await ctx.reply("✅ Добавлено.");
+  await showList(ctx, key);
+}
