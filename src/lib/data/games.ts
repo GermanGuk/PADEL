@@ -1,8 +1,34 @@
 import "server-only";
-import { randomUUID } from "crypto";
-import { readDb, writeDb } from "@/lib/mock-store";
+import { supabasePublic } from "@/lib/supabase/public";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { DbGame } from "@/lib/db-types";
 import type { GameCard } from "@/lib/content";
+
+type Row = {
+  id: string;
+  featured: boolean;
+  badge: string;
+  title: string;
+  meta: DbGame["meta"];
+  extra: string | null;
+  price: string | null;
+  image: string | null;
+  sort_order: number;
+};
+
+function fromRow(row: Row): DbGame {
+  return {
+    id: row.id,
+    featured: row.featured,
+    badge: row.badge,
+    title: row.title,
+    meta: row.meta,
+    extra: row.extra,
+    price: row.price,
+    image: row.image,
+    sortOrder: row.sort_order,
+  };
+}
 
 function toGameCard(row: DbGame): GameCard {
   return {
@@ -16,37 +42,49 @@ function toGameCard(row: DbGame): GameCard {
   };
 }
 
-function sorted(games: DbGame[]): DbGame[] {
-  return [...games].sort((a, b) => a.sortOrder - b.sortOrder);
-}
-
 export async function getGameCards(): Promise<GameCard[]> {
-  const db = await readDb();
-  return sorted(db.games).map(toGameCard);
+  const { data, error } = await supabasePublic.from("games").select("*").order("sort_order");
+  if (error || !data) return [];
+  return (data as Row[]).map(fromRow).map(toGameCard);
 }
 
 export async function getGamesForAdmin(): Promise<DbGame[]> {
-  const db = await readDb();
-  return sorted(db.games);
+  const { data, error } = await supabaseAdmin.from("games").select("*").order("sort_order");
+  if (error || !data) return [];
+  return (data as Row[]).map(fromRow);
 }
 
 export async function createGame(data: Omit<DbGame, "id">): Promise<void> {
-  const db = await readDb();
-  db.games.push({ ...data, id: randomUUID() });
-  await writeDb(db);
+  await supabaseAdmin.from("games").insert({
+    featured: data.featured,
+    badge: data.badge,
+    title: data.title,
+    meta: data.meta,
+    extra: data.extra,
+    price: data.price,
+    image: data.image,
+    sort_order: data.sortOrder,
+  });
 }
 
 export async function updateGame(id: string, data: Omit<DbGame, "id">): Promise<void> {
-  const db = await readDb();
-  const idx = db.games.findIndex((g) => g.id === id);
-  if (idx !== -1) db.games[idx] = { ...data, id };
-  await writeDb(db);
+  await supabaseAdmin
+    .from("games")
+    .update({
+      featured: data.featured,
+      badge: data.badge,
+      title: data.title,
+      meta: data.meta,
+      extra: data.extra,
+      price: data.price,
+      image: data.image,
+      sort_order: data.sortOrder,
+    })
+    .eq("id", id);
 }
 
 export async function deleteGame(id: string): Promise<DbGame | undefined> {
-  const db = await readDb();
-  const game = db.games.find((g) => g.id === id);
-  db.games = db.games.filter((g) => g.id !== id);
-  await writeDb(db);
-  return game;
+  const { data } = await supabaseAdmin.from("games").select("*").eq("id", id).maybeSingle();
+  await supabaseAdmin.from("games").delete().eq("id", id);
+  return data ? fromRow(data as Row) : undefined;
 }

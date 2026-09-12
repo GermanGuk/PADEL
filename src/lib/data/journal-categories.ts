@@ -1,31 +1,22 @@
 import "server-only";
-import { randomUUID } from "crypto";
-import { readDb, writeDb } from "@/lib/mock-store";
+import { supabasePublic } from "@/lib/supabase/public";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { DbJournalCategory } from "@/lib/db-types";
 
 export async function getJournalCategories(): Promise<DbJournalCategory[]> {
-  const db = await readDb();
-  return db.journalCategories;
+  const { data, error } = await supabasePublic.from("journal_categories").select("id, name").order("created_at");
+  if (error || !data) return [];
+  return data;
 }
 
 export async function createJournalCategory(name: string): Promise<void> {
-  const db = await readDb();
-  db.journalCategories.push({ id: randomUUID(), name });
-  await writeDb(db);
+  await supabaseAdmin.from("journal_categories").insert({ name });
 }
 
 export async function renameJournalCategory(id: string, name: string): Promise<void> {
-  const db = await readDb();
-  const category = db.journalCategories.find((c) => c.id === id);
-  if (category) category.name = name;
-  await writeDb(db);
+  await supabaseAdmin.from("journal_categories").update({ name }).eq("id", id);
 }
 
 export async function deleteJournalCategory(id: string): Promise<void> {
-  const db = await readDb();
-  db.journalCategories = db.journalCategories.filter((c) => c.id !== id);
-  for (const article of db.articles) {
-    if (article.categoryId === id) article.categoryId = null;
-  }
-  await writeDb(db);
+  await supabaseAdmin.from("journal_categories").delete().eq("id", id);
 }

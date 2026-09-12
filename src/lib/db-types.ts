@@ -1,7 +1,5 @@
-// Shape of data/mock-db.json — the local, file-based stand-in for a real
-// database during this mock-data phase. Mirrors the shape a Supabase schema
-// would use (id + sortOrder per row) so swapping in a real DB later only
-// touches src/lib/data/*.ts, not the admin UI.
+// App-side shape of each Supabase table (camelCase; src/lib/data/*.ts maps
+// to/from the snake_case DB columns — see supabase/schema.sql).
 
 export type GameMeta = { icon: "players" | "courts" | "clock" | "location"; text: string };
 

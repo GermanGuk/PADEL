@@ -1,14 +1,17 @@
--- Top Padel Alicante — content schema.
+-- Top Padel Alicante — content schema (Supabase / Postgres).
 -- Run this once in the Supabase SQL editor (Project → SQL Editor → New query).
 --
--- Auth model: single owner account, created manually in
--- Authentication → Users → Add user (email + password) after running this file.
--- Any authenticated user may write; the app never exposes signup, so the
--- only authenticated user is the owner.
+-- Auth model: admin login is NOT Supabase Auth — the app gates /admin with its
+-- own password + signed cookie (see src/lib/auth.ts, ADMIN_PASSWORD /
+-- ADMIN_SESSION_SECRET). Supabase here is only Postgres + Storage:
+--   - public (anon key) may SELECT everything, nothing else.
+--   - all writes go through the server-role key from server actions, which
+--     bypasses RLS entirely — the app's own password gate is the real
+--     access control, so no "authenticated" RLS policies are needed.
 
 create extension if not exists pgcrypto;
 
--- ── Games / schedule ────────────────────────────────────────────────
+-- ── Games / tournaments ──────────────────────────────────────────────
 create table if not exists games (
   id uuid primary key default gen_random_uuid(),
   featured boolean not null default false,
@@ -22,79 +25,112 @@ create table if not exists games (
   created_at timestamptz not null default now()
 );
 
--- ── Training / pricing plans ────────────────────────────────────────
-create table if not exists pricing_plans (
+-- ── Training plans / pricing ─────────────────────────────────────────
+create table if not exists training_plans (
   id uuid primary key default gen_random_uuid(),
   dark boolean not null default false,
   number text not null,
   title text not null,
   description text not null,
   price text not null,
-  icon text not null default 'solo', -- "solo" | "group"
+  icon text not null default 'solo' check (icon in ('solo', 'group')),
   rows jsonb not null default '[]', -- [{ label, oldPrice, newPrice }]
   sort_order integer not null default 0
 );
 
--- ── Gallery photos ───────────────────────────────────────────────────
+-- ── Gallery ───────────────────────────────────────────────────────────
+create table if not exists gallery_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists gallery_images (
   id uuid primary key default gen_random_uuid(),
   url text not null,
+  category_id uuid references gallery_categories(id) on delete set null,
   sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
 
--- ── Journal articles ─────────────────────────────────────────────────
+-- ── Padel Journal ─────────────────────────────────────────────────────
+create table if not exists journal_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists articles (
   id uuid primary key default gen_random_uuid(),
-  number text not null,
-  tag text not null,
   title text not null,
-  image text not null,
+  category_id uuid references journal_categories(id) on delete set null,
+  slug text not null unique,
+  cover text not null,
+  body text not null default '',
+  seo_title text not null default '',
+  seo_description text not null default '',
+  published boolean not null default true,
   sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
 
--- ── Editable site texts (key/value) ─────────────────────────────────
-create table if not exists site_texts (
-  key text primary key,
-  value text not null
+-- ── Site-wide SEO (homepage title/description + favicon) ────────────
+-- Singleton row: always id = 1.
+create table if not exists site_settings (
+  id smallint primary key default 1 check (id = 1),
+  seo_title text not null,
+  seo_description text not null,
+  favicon_url text
 );
 
--- ── Row Level Security: public read, authenticated write ────────────
+-- ── Row Level Security: public read, no anon/authenticated writes ───
+-- (writes only via the service-role key, which bypasses RLS)
 alter table games enable row level security;
-alter table pricing_plans enable row level security;
+alter table training_plans enable row level security;
+alter table gallery_categories enable row level security;
 alter table gallery_images enable row level security;
+alter table journal_categories enable row level security;
 alter table articles enable row level security;
-alter table site_texts enable row level security;
+alter table site_settings enable row level security;
 
 create policy "public read games" on games for select using (true);
-create policy "admin write games" on games for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
-create policy "public read pricing_plans" on pricing_plans for select using (true);
-create policy "admin write pricing_plans" on pricing_plans for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
+create policy "public read training_plans" on training_plans for select using (true);
+create policy "public read gallery_categories" on gallery_categories for select using (true);
 create policy "public read gallery_images" on gallery_images for select using (true);
-create policy "admin write gallery_images" on gallery_images for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
+create policy "public read journal_categories" on journal_categories for select using (true);
 create policy "public read articles" on articles for select using (true);
-create policy "admin write articles" on articles for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "public read site_settings" on site_settings for select using (true);
 
-create policy "public read site_texts" on site_texts for select using (true);
-create policy "admin write site_texts" on site_texts for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+-- RLS controls row visibility, but Postgres also needs table-level grants
+-- for the anon/authenticated roles to query at all — new projects don't
+-- always have these pre-configured for tables created via the SQL editor.
+grant usage on schema public to anon, authenticated, service_role;
 
--- ── Storage bucket for uploaded photos ───────────────────────────────
+grant select on
+  games, training_plans, gallery_categories, gallery_images,
+  journal_categories, articles, site_settings
+to anon, authenticated;
+
+grant all on
+  games, training_plans, gallery_categories, gallery_images,
+  journal_categories, articles, site_settings
+to service_role;
+
+-- ── Storage bucket for admin-uploaded photos ─────────────────────────
+-- Folders: photos/games, photos/gallery, photos/journal, photos/settings
+-- (mirrors the current public/uploads/<folder> layout).
 insert into storage.buckets (id, name, public)
 values ('photos', 'photos', true)
 on conflict (id) do nothing;
+-- No insert/update/delete policies for anon/authenticated: the bucket is
+-- public for reads, and all writes go through the service-role key.
 
-create policy "public read photos bucket" on storage.objects for select using (bucket_id = 'photos');
-create policy "admin write photos bucket" on storage.objects for insert with check (bucket_id = 'photos' and auth.role() = 'authenticated');
-create policy "admin update photos bucket" on storage.objects for update using (bucket_id = 'photos' and auth.role() = 'authenticated');
-create policy "admin delete photos bucket" on storage.objects for delete using (bucket_id = 'photos' and auth.role() = 'authenticated');
+-- ── Seed data: mirrors the current mock admin content (data/mock-db.json)
+--    so the site looks identical the moment Supabase is wired in. Safe to
+--    re-run (idempotent on empty tables only — skip if you already edited
+--    content in /admin). Seed photos stay on their current /images/... path;
+--    only new uploads through the admin go to Storage.
 
--- ── Seed data: mirrors the current hardcoded content so the site looks
---    identical the moment Supabase is wired in. Safe to re-run (idempotent
---    on empty tables only — skip if you already edited content in /admin).
 insert into games (featured, badge, title, meta, extra, price, image, sort_order)
 select * from (values
   (true, '19 сентября · Суббота', 'Mexicano El Salt',
@@ -112,42 +148,65 @@ select * from (values
 ) as v
 where not exists (select 1 from games);
 
-insert into pricing_plans (dark, number, title, description, price, icon, rows, sort_order)
+insert into training_plans (dark, number, title, description, price, icon, rows, sort_order)
 select * from (values
   (false, '01.', 'Индивидуальные тренировки', 'Персональная работа с тренером только над твоей игрой.', '30 €', 'solo',
     '[{"label":"4 тренировки","oldPrice":"120 €","newPrice":"100 €"},{"label":"8 тренировок","oldPrice":"240 €","newPrice":"180 €"}]'::jsonb, 0),
   (true, '02.', 'Групповая тренировка', 'Тренируйся в команде с игроками своего уровня.', '40 €', 'group',
     '[{"label":"4 тренировки","oldPrice":"160 €","newPrice":"140 €"},{"label":"8 тренировки","oldPrice":"320 €","newPrice":"260 €"}]'::jsonb, 1)
 ) as v
-where not exists (select 1 from pricing_plans);
+where not exists (select 1 from training_plans);
 
-insert into gallery_images (url, sort_order)
-select * from (values
-  ('/images/gallery/1.png', 0), ('/images/gallery/2.png', 1), ('/images/gallery/3.png', 2), ('/images/gallery/4.png', 3),
-  ('/images/gallery/5.png', 4), ('/images/gallery/6.png', 5), ('/images/gallery/7.png', 6), ('/images/gallery/8.png', 7)
-) as v
+with seeded_gallery_categories as (
+  insert into gallery_categories (name)
+  select name from (values ('Тренировки'), ('Турниры'), ('Top Padel Academy')) as v(name)
+  where not exists (select 1 from gallery_categories)
+  returning id, name
+)
+insert into gallery_images (url, category_id, sort_order)
+select v.url, c.id, v.sort_order
+from (values
+  ('/images/gallery/1.png', 'Турниры', 0),
+  ('/images/gallery/2.png', 'Тренировки', 1),
+  ('/images/gallery/3.png', 'Top Padel Academy', 2),
+  ('/images/gallery/4.png', 'Тренировки', 3),
+  ('/images/gallery/5.png', 'Турниры', 4),
+  ('/images/gallery/6.png', 'Top Padel Academy', 5),
+  ('/images/gallery/7.png', 'Тренировки', 6),
+  ('/images/gallery/8.png', 'Турниры', 7)
+) as v(url, category_name, sort_order)
+join seeded_gallery_categories c on c.name = v.category_name
 where not exists (select 1 from gallery_images);
 
-insert into articles (number, tag, title, image, sort_order)
-select * from (values
-  ('01', 'СОВЕТЫ', 'Как подобрать правильную ракетку для падела', '/images/journal/article-1.png', 0),
-  ('02', 'СОВЕТЫ', 'Где поиграть в падел в Аликанте: площадки и клубы', '/images/journal/article-2.png', 1)
-) as v
+with seeded_journal_categories as (
+  insert into journal_categories (name)
+  select name from (values ('Советы'), ('Тренировки'), ('Турниры')) as v(name)
+  where not exists (select 1 from journal_categories)
+  returning id, name
+)
+insert into articles (title, category_id, slug, cover, body, seo_title, seo_description, published, sort_order)
+select v.title, c.id, v.slug, v.cover, v.body, v.seo_title, v.seo_description, true, v.sort_order
+from (values
+  (
+    'Как подобрать правильную ракетку для падела', 'Советы',
+    'kak-podobrat-pravilnuyu-raketku-dlya-padela', '/images/journal/article-1.png',
+    E'Ракетка для падела — это не про "дороже значит лучше". Важнее вес, баланс и форма под твой уровень и стиль игры. Новичкам обычно подходят более лёгкие ракетки круглой формы — они прощают неточное попадание в мяч. Игрокам с опытом — ракетки слезовидной или ромбовидной формы, которые дают больше мощности в удар.\n\nПеред покупкой лучше взять ракетку на пробную тренировку: почувствовать вес в руке и то, как она отзывается на удар, важнее любых характеристик на бумаге.',
+    'Как выбрать ракетку для падела — гид для новичков',
+    'Разбираем, как выбрать ракетку для падела по форме, весу и балансу — с учётом уровня и стиля игры.',
+    0
+  ),
+  (
+    'Где поиграть в падел в Аликанте: площадки и клубы', 'Советы',
+    'gde-poigrat-v-padel-v-alikante-ploschadki-i-kluby', '/images/journal/article-2.png',
+    E'Аликанте — один из центров падела на побережье Коста Бланка: десятки крытых и открытых кортов в шаговой доступности от центра города. Мы собрали площадки, где регулярно играет наше сообщество, и где проще всего найти партнёра на игру даже если ты приехал в город впервые.\n\nБольшинство клубов принимают гостей без абонемента — можно просто забронировать корт на час. Если хочешь сразу попасть в компанию, лучше приходить на организованные игры из нашего расписания.',
+    'Где поиграть в падел в Аликанте — площадки и клубы',
+    'Обзор площадок и клубов для падела в Аликанте: где забронировать корт и где проще найти партнёра для игры.',
+    1
+  )
+) as v(title, category_name, slug, cover, body, seo_title, seo_description, sort_order)
+join seeded_journal_categories c on c.name = v.category_name
 where not exists (select 1 from articles);
 
-insert into site_texts (key, value)
-select * from (values
-  ('hero.title.line1', 'Падел объединяет людей'),
-  ('hero.title.line2', 'и превращает обычную игру'),
-  ('hero.title.line3', 'в часть твоей жизни'),
-  ('hero.subtitle.left', E'Тренировки для любого уровня.\nУчись, играй и становись сильнее.'),
-  ('hero.subtitle.right', E'Турниры и игровые встречи\nкаждую неделю в Аликанте.'),
-  ('training.heading.line1', 'Играй лучше.'),
-  ('training.heading.line2', 'Получай больше'),
-  ('training.heading.line2Highlight', 'удовольствие'),
-  ('training.description', E'Подбираем тренировки под твой уровень\nи цели. Индивидуально или в группе.'),
-  ('community.heading', 'Ищешь напарника?'),
-  ('community.headingHighlight', 'Найдём.'),
-  ('community.description', 'В Telegram каждый день ищут игроков, собирают пары, договариваются об играх и турнирах.')
-) as v
-where not exists (select 1 from site_texts);
+insert into site_settings (id, seo_title, seo_description, favicon_url)
+select 1, 'Top Padel Alicante', 'Падел-клуб в Аликанте: тренировки, турниры, сообщество игроков.', null
+where not exists (select 1 from site_settings);

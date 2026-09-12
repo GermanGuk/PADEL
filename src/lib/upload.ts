@@ -1,35 +1,32 @@
 import "server-only";
-import { mkdir, unlink, writeFile } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
-const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
+const BUCKET = "photos";
 
-// Saves an uploaded File to public/uploads/<folder>/ and returns its public URL.
-// Local filesystem only — matches this project's current mock-data phase
-// (see AGENTS.md: no external storage yet). On a serverless deploy the
-// filesystem is read-only outside /tmp, so this only works when running
-// `next dev` / `next start` on a machine with a persistent disk.
+// Uploads a File to Supabase Storage under photos/<folder>/ and returns its
+// public URL. Folder mirrors the admin section it came from (games, gallery,
+// journal, settings).
 export async function saveUploadedFile(file: File, folder: string): Promise<string> {
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const ext = path.extname(file.name).toLowerCase() || "";
-  const name = `${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
+  const ext = file.name.includes(".") ? `.${file.name.split(".").pop()!.toLowerCase()}` : "";
+  const path = `${folder}/${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
 
-  const dir = path.join(UPLOADS_ROOT, folder);
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), bytes);
+  const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, {
+    contentType: file.type || undefined,
+  });
+  if (error) throw new Error(`Failed to upload file: ${error.message}`);
 
-  return `/uploads/${folder}/${name}`;
+  const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
 }
 
-// Best-effort delete of a previously uploaded file. Silently ignores files
-// that live outside /uploads (e.g. seed images under /images) or that are
-// already gone.
+// Best-effort delete of a previously uploaded file. Silently ignores URLs
+// that don't point into our Storage bucket (e.g. seed images under /images).
 export async function deleteUploadedFile(url: string): Promise<void> {
-  if (!url.startsWith("/uploads/")) return;
-  try {
-    await unlink(path.join(process.cwd(), "public", url));
-  } catch {
-    // already gone — nothing to do
-  }
+  const marker = `/storage/v1/object/public/${BUCKET}/`;
+  const idx = url.indexOf(marker);
+  if (idx === -1) return;
+
+  const path = url.slice(idx + marker.length);
+  await supabaseAdmin.storage.from(BUCKET).remove([path]);
 }

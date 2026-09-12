@@ -1,31 +1,22 @@
 import "server-only";
-import { randomUUID } from "crypto";
-import { readDb, writeDb } from "@/lib/mock-store";
+import { supabasePublic } from "@/lib/supabase/public";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { DbGalleryCategory } from "@/lib/db-types";
 
 export async function getGalleryCategories(): Promise<DbGalleryCategory[]> {
-  const db = await readDb();
-  return db.galleryCategories;
+  const { data, error } = await supabasePublic.from("gallery_categories").select("id, name").order("created_at");
+  if (error || !data) return [];
+  return data;
 }
 
 export async function createGalleryCategory(name: string): Promise<void> {
-  const db = await readDb();
-  db.galleryCategories.push({ id: randomUUID(), name });
-  await writeDb(db);
+  await supabaseAdmin.from("gallery_categories").insert({ name });
 }
 
 export async function renameGalleryCategory(id: string, name: string): Promise<void> {
-  const db = await readDb();
-  const category = db.galleryCategories.find((c) => c.id === id);
-  if (category) category.name = name;
-  await writeDb(db);
+  await supabaseAdmin.from("gallery_categories").update({ name }).eq("id", id);
 }
 
 export async function deleteGalleryCategory(id: string): Promise<void> {
-  const db = await readDb();
-  db.galleryCategories = db.galleryCategories.filter((c) => c.id !== id);
-  for (const image of db.galleryImages) {
-    if (image.categoryId === id) image.categoryId = null;
-  }
-  await writeDb(db);
+  await supabaseAdmin.from("gallery_categories").delete().eq("id", id);
 }

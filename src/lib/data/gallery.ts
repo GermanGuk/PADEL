@@ -1,44 +1,50 @@
 import "server-only";
-import { randomUUID } from "crypto";
-import { readDb, writeDb } from "@/lib/mock-store";
+import { supabasePublic } from "@/lib/supabase/public";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { DbGalleryImage } from "@/lib/db-types";
 
 export type GalleryImage = { id: string; url: string; categoryId: string | null };
 
-function sorted(images: DbGalleryImage[]): DbGalleryImage[] {
-  return [...images].sort((a, b) => a.sortOrder - b.sortOrder);
+type Row = { id: string; url: string; category_id: string | null; sort_order: number };
+
+function fromRow(row: Row): DbGalleryImage {
+  return { id: row.id, url: row.url, categoryId: row.category_id, sortOrder: row.sort_order };
 }
 
 export async function getGalleryImages(): Promise<GalleryImage[]> {
-  const db = await readDb();
-  return sorted(db.galleryImages).map(({ id, url, categoryId }) => ({ id, url, categoryId }));
+  const { data, error } = await supabasePublic.from("gallery_images").select("*").order("sort_order");
+  if (error || !data) return [];
+  return (data as Row[]).map(fromRow).map(({ id, url, categoryId }) => ({ id, url, categoryId }));
 }
 
 export async function getGalleryImagesForAdmin(): Promise<DbGalleryImage[]> {
-  const db = await readDb();
-  return sorted(db.galleryImages);
+  const { data, error } = await supabaseAdmin.from("gallery_images").select("*").order("sort_order");
+  if (error || !data) return [];
+  return (data as Row[]).map(fromRow);
 }
 
 export async function createGalleryImage(data: Omit<DbGalleryImage, "id">): Promise<void> {
-  const db = await readDb();
-  db.galleryImages.push({ ...data, id: randomUUID() });
-  await writeDb(db);
+  await supabaseAdmin.from("gallery_images").insert({
+    url: data.url,
+    category_id: data.categoryId,
+    sort_order: data.sortOrder,
+  });
 }
 
 export async function updateGalleryImage(
   id: string,
   data: Partial<Omit<DbGalleryImage, "id">>
 ): Promise<void> {
-  const db = await readDb();
-  const image = db.galleryImages.find((i) => i.id === id);
-  if (image) Object.assign(image, data);
-  await writeDb(db);
+  const update: Record<string, unknown> = {};
+  if (data.url !== undefined) update.url = data.url;
+  if (data.categoryId !== undefined) update.category_id = data.categoryId;
+  if (data.sortOrder !== undefined) update.sort_order = data.sortOrder;
+
+  await supabaseAdmin.from("gallery_images").update(update).eq("id", id);
 }
 
 export async function deleteGalleryImage(id: string): Promise<DbGalleryImage | undefined> {
-  const db = await readDb();
-  const image = db.galleryImages.find((i) => i.id === id);
-  db.galleryImages = db.galleryImages.filter((i) => i.id !== id);
-  await writeDb(db);
-  return image;
+  const { data } = await supabaseAdmin.from("gallery_images").select("*").eq("id", id).maybeSingle();
+  await supabaseAdmin.from("gallery_images").delete().eq("id", id);
+  return data ? fromRow(data as Row) : undefined;
 }

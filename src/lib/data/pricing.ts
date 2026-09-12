@@ -1,8 +1,34 @@
 import "server-only";
-import { randomUUID } from "crypto";
-import { readDb, writeDb } from "@/lib/mock-store";
+import { supabasePublic } from "@/lib/supabase/public";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { DbTrainingPlan } from "@/lib/db-types";
 import type { PricingPlan } from "@/lib/content";
+
+type Row = {
+  id: string;
+  dark: boolean;
+  number: string;
+  title: string;
+  description: string;
+  price: string;
+  icon: DbTrainingPlan["icon"];
+  rows: DbTrainingPlan["rows"];
+  sort_order: number;
+};
+
+function fromRow(row: Row): DbTrainingPlan {
+  return {
+    id: row.id,
+    dark: row.dark,
+    number: row.number,
+    title: row.title,
+    description: row.description,
+    price: row.price,
+    icon: row.icon,
+    rows: row.rows,
+    sortOrder: row.sort_order,
+  };
+}
 
 function toPricingPlan(row: DbTrainingPlan): PricingPlan {
   return {
@@ -16,35 +42,47 @@ function toPricingPlan(row: DbTrainingPlan): PricingPlan {
   };
 }
 
-function sorted(plans: DbTrainingPlan[]): DbTrainingPlan[] {
-  return [...plans].sort((a, b) => a.sortOrder - b.sortOrder);
-}
-
 export async function getPricingPlans(): Promise<PricingPlan[]> {
-  const db = await readDb();
-  return sorted(db.trainingPlans).map(toPricingPlan);
+  const { data, error } = await supabasePublic.from("training_plans").select("*").order("sort_order");
+  if (error || !data) return [];
+  return (data as Row[]).map(fromRow).map(toPricingPlan);
 }
 
 export async function getPricingPlansForAdmin(): Promise<DbTrainingPlan[]> {
-  const db = await readDb();
-  return sorted(db.trainingPlans);
+  const { data, error } = await supabaseAdmin.from("training_plans").select("*").order("sort_order");
+  if (error || !data) return [];
+  return (data as Row[]).map(fromRow);
 }
 
 export async function createPricingPlan(data: Omit<DbTrainingPlan, "id">): Promise<void> {
-  const db = await readDb();
-  db.trainingPlans.push({ ...data, id: randomUUID() });
-  await writeDb(db);
+  await supabaseAdmin.from("training_plans").insert({
+    dark: data.dark,
+    number: data.number,
+    title: data.title,
+    description: data.description,
+    price: data.price,
+    icon: data.icon,
+    rows: data.rows,
+    sort_order: data.sortOrder,
+  });
 }
 
 export async function updatePricingPlan(id: string, data: Omit<DbTrainingPlan, "id">): Promise<void> {
-  const db = await readDb();
-  const idx = db.trainingPlans.findIndex((p) => p.id === id);
-  if (idx !== -1) db.trainingPlans[idx] = { ...data, id };
-  await writeDb(db);
+  await supabaseAdmin
+    .from("training_plans")
+    .update({
+      dark: data.dark,
+      number: data.number,
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      icon: data.icon,
+      rows: data.rows,
+      sort_order: data.sortOrder,
+    })
+    .eq("id", id);
 }
 
 export async function deletePricingPlan(id: string): Promise<void> {
-  const db = await readDb();
-  db.trainingPlans = db.trainingPlans.filter((p) => p.id !== id);
-  await writeDb(db);
+  await supabaseAdmin.from("training_plans").delete().eq("id", id);
 }
