@@ -4,12 +4,15 @@
 
 export type NavLink = { label: string; href: string };
 
+// Absolute ("/#id") rather than bare ("#id") anchors — these render in the
+// Header/Footer on every page (journal articles, privacy, cookies), not
+// just the homepage where the target sections actually live.
 export const navLinks: NavLink[] = [
-  { label: "Ближайшие игры", href: "#games" },
-  { label: "Турниры", href: "#games" },
-  { label: "Тренировки", href: "#training" },
-  { label: "О нас", href: "#community" },
-  { label: "Контакты", href: "#footer" },
+  { label: "Ближайшие игры", href: "/#games" },
+  { label: "Турниры", href: "/#games" },
+  { label: "Тренировки", href: "/#training" },
+  { label: "О нас", href: "/#community" },
+  { label: "Контакты", href: "/#footer" },
 ];
 
 export type HeroCard = {
@@ -192,11 +195,11 @@ export const communityBubbles = [
 ];
 
 export const footerNav = [
-  { label: "Турниры", href: "#games" },
-  { label: "Тренировки", href: "#training" },
-  { label: "Найти партнёра", href: "#community" },
-  { label: "Новости", href: "#journal" },
-  { label: "Галерея", href: "#gallery" },
+  { label: "Турниры", href: "/#games" },
+  { label: "Тренировки", href: "/#training" },
+  { label: "Найти партнёра", href: "/#community" },
+  { label: "Новости", href: "/#journal" },
+  { label: "Галерея", href: "/#gallery" },
 ];
 
 export const footerContacts = [

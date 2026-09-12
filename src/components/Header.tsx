@@ -38,7 +38,7 @@ export function Header({ telegramUrl = siteLinks.telegram }: HeaderProps) {
         }`}
       >
         <div className="container-page flex h-[84px] items-center justify-between">
-          <Link href="#top" className="flex items-center gap-2.5">
+          <Link href="/#top" className="flex items-center gap-2.5">
             <Image src="/images/icons/logo-mark.svg" alt="" width={36} height={36} className="h-9 w-9" />
             <span className="font-extrabold leading-[1.1] text-base text-ink">
               TOP PADEL
