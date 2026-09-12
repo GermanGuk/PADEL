@@ -73,7 +73,7 @@ export function Gallery({ images, categories }: GalleryProps) {
             {row.map((img) => (
               <RevealItem
                 key={img.id}
-                className="aspect-[4/3] w-[240px] shrink-0 snap-start sm:w-auto sm:shrink lg:aspect-auto lg:h-72 lg:shrink lg:grow lg:basis-0 lg:transition-[flex-grow] lg:duration-1000 lg:ease-in-out lg:hover:grow-[2.5]"
+                className="aspect-square w-[240px] shrink-0 snap-start sm:w-auto sm:shrink lg:aspect-auto lg:h-72 lg:shrink lg:grow lg:basis-0 lg:transition-[flex-grow] lg:duration-1000 lg:ease-in-out lg:hover:grow-[2.5]"
               >
                 <div className="relative h-full w-full overflow-hidden rounded-[14px]">
                   <Image

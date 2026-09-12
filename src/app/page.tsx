@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { Journal } from "@/components/Journal";
 import { Training } from "@/components/Training";
+import { WaveDivider } from "@/components/ui/WaveDivider";
 import { heroCards } from "@/lib/content";
 import { getArticles } from "@/lib/data/articles";
 import { getGalleryImages } from "@/lib/data/gallery";
@@ -47,6 +48,7 @@ export default async function Home() {
       <Header />
       <main className="flex-1">
         <Hero cards={cards} texts={texts} />
+        <WaveDivider />
         <Games games={games} />
         <Training plans={plans} texts={texts} />
         <Gallery images={images} categories={galleryCategories} />

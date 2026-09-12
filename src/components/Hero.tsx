@@ -13,6 +13,14 @@ export function Hero({ cards = heroCards, texts = fallbackTexts }: HeroProps) {
       className="container-page flex min-h-[100svh] flex-col justify-center gap-10 py-8 md:gap-14 lg:min-h-[calc(100svh-84px)]"
     >
       <Reveal className="flex flex-col items-center gap-6 text-center md:gap-8" y={28}>
+        <Image
+          src="/images/icons/logo-mark.svg"
+          alt=""
+          width={44}
+          height={44}
+          className="h-11 w-11 lg:hidden"
+        />
+
         <h1 className="hero-h1 max-w-[1200px] font-extrabold text-ink">
           {texts["hero.title.line1"]}
           <br />

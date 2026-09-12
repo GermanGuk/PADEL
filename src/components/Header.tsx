@@ -8,9 +8,13 @@ import { navLinks, siteLinks } from "@/lib/content";
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [pastThreshold, setPastThreshold] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      setPastThreshold(window.scrollY > 200);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -59,8 +63,13 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile: a single floating, fixed circular burger button — no bar, no logo, no full-screen panel */}
-      <div className="fixed right-4 top-4 z-50 lg:hidden">
+      {/* Mobile: a single floating, fixed circular burger button — no bar, no logo, no full-screen panel.
+          Hidden until the user scrolls 200px, so it doesn't compete with the hero. */}
+      <div
+        className={`fixed right-4 top-4 z-50 transition-opacity duration-300 lg:hidden ${
+          pastThreshold || open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
         <button
           type="button"
           aria-label={open ? "Закрыть меню" : "Открыть меню"}
