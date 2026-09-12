@@ -13,9 +13,9 @@ export function Hero({ cards = heroCards, texts = fallbackTexts }: HeroProps) {
       className="container-page flex min-h-[100svh] flex-col justify-center gap-10 py-8 md:gap-14 lg:min-h-[calc(100svh-84px)]"
     >
       <Reveal className="flex flex-col items-center gap-6 text-center md:gap-8" y={28}>
-        <div className="flex flex-col items-center gap-1.5 lg:hidden">
-          <Image src="/images/icons/logo-mark.svg" alt="" width={44} height={44} className="h-11 w-11" />
-          <span className="text-center text-sm font-extrabold leading-[1.1] text-ink">
+        <div className="flex items-center justify-center gap-2.5 lg:hidden">
+          <Image src="/images/icons/logo-mark.svg" alt="" width={36} height={36} className="h-9 w-9" />
+          <span className="text-left text-base font-extrabold leading-[1.1] text-ink">
             TOP PADEL
             <br />
             ALICANTE
