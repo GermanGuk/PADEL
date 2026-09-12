@@ -63,7 +63,7 @@ export function Journal({ articles, categories }: JournalProps) {
         ))}
       </Reveal>
 
-      <RevealStagger key={activeTab} className="mt-6 flex flex-col gap-4 sm:grid sm:grid-cols-2">
+      <RevealStagger key={activeTab} className="mt-6 flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((article, i) => (
           <RevealItem key={article.id} className="group w-full sm:w-auto">
             <Link
@@ -74,7 +74,7 @@ export function Journal({ articles, categories }: JournalProps) {
                 src={article.cover}
                 alt=""
                 fill
-                sizes="(min-width: 640px) 50vw, 85vw"
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 85vw"
                 className="scale-100 object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                 unoptimized={article.cover.startsWith("http")}
               />
@@ -91,7 +91,7 @@ export function Journal({ articles, categories }: JournalProps) {
                   </p>
                 )}
                 <p className="text-[11px] font-normal text-white sm:text-[15px]">{article.title}</p>
-                <span className="text-sm font-medium text-white sm:text-base">
+                <span className="text-sm font-medium text-white transition-colors duration-300 group-hover:text-lime sm:text-base">
                   Читать статью <span className="text-lime">↗</span>
                 </span>
               </div>
