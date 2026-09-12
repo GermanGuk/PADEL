@@ -1,7 +1,11 @@
 export function WaveDivider() {
   return (
-    <div aria-hidden className="pointer-events-none select-none py-3 lg:hidden">
-      <svg viewBox="0 0 400 90" className="h-auto w-full" preserveAspectRatio="none">
+    <div aria-hidden className="pointer-events-none select-none overflow-hidden py-3 lg:hidden">
+      <svg
+        viewBox="0 0 420 90"
+        className="h-auto w-[78%] max-w-[360px]"
+        preserveAspectRatio="xMinYMid meet"
+      >
         <defs>
           <linearGradient id="wave-divider-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#e3f78a" />
@@ -10,7 +14,7 @@ export function WaveDivider() {
           </linearGradient>
         </defs>
         <path
-          d="M-10,45 C8,18 30,74 54,58 C76,44 56,12 92,17 C148,25 172,76 246,55 C302,40 348,10 412,27"
+          d="M-10,45 C8,18 30,74 54,58 C76,44 56,12 92,17 C148,25 172,76 246,55 C296,42 330,22 352,34"
           fill="none"
           stroke="url(#wave-divider-grad)"
           strokeWidth="12"
