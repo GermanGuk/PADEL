@@ -8,6 +8,7 @@ import { Journal } from "@/components/Journal";
 import { Training } from "@/components/Training";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { getArticles } from "@/lib/data/articles";
+import { getCommunityContent } from "@/lib/data/community";
 import { getGalleryImages } from "@/lib/data/gallery";
 import { getGalleryCategories } from "@/lib/data/gallery-categories";
 import { getGameCards } from "@/lib/data/games";
@@ -18,7 +19,7 @@ import { getSettings } from "@/lib/data/settings";
 import { getSiteTexts } from "@/lib/data/site-texts";
 
 export default async function Home() {
-  const [cards, games, plans, images, galleryCategories, articles, journalCategories, texts, settings] =
+  const [cards, games, plans, images, galleryCategories, articles, journalCategories, texts, settings, community] =
     await Promise.all([
       getHeroCards(),
       getGameCards(),
@@ -29,6 +30,7 @@ export default async function Home() {
       getJournalCategories(),
       getSiteTexts(),
       getSettings(),
+      getCommunityContent(),
     ]);
 
   return (
@@ -40,7 +42,7 @@ export default async function Home() {
         <Games games={games} />
         <Training plans={plans} texts={texts} />
         <Gallery images={images} categories={galleryCategories} instagramUrl={settings.instagramUrl ?? undefined} />
-        <Community texts={texts} />
+        <Community content={community} />
         <Journal articles={articles} categories={journalCategories} />
       </main>
       <Footer

@@ -32,6 +32,7 @@ import {
   renameJournalCategory,
 } from "@/lib/data/journal-categories";
 import { getSettings, updateSettings } from "@/lib/data/settings";
+import { getCommunityContentForAdmin, updateCommunityContent } from "@/lib/data/community";
 import {
   createHeroCard,
   deleteHeroCard,
@@ -462,6 +463,37 @@ export async function saveSettingsValue(field: string, value: string | boolean |
   await updateSettings(next);
 }
 
+// ── Сообщество (singleton, без списка) ────────────────────────────────
+export const communityFields: FieldSpec[] = [
+  { key: "heading", label: "Заголовок", type: "text" },
+  { key: "headingHighlight", label: "Заголовок (выделенное слово)", type: "text" },
+  { key: "description", label: "Описание", type: "text" },
+  { key: "buttonLink", label: "Ссылка на кнопке", type: "text" },
+  { key: "image", label: "Фото", type: "photo", folder: "community" },
+];
+
+export async function getCommunityValues(): Promise<EntityValues> {
+  const c = await getCommunityContentForAdmin();
+  return {
+    heading: c.heading,
+    headingHighlight: c.headingHighlight,
+    description: c.description,
+    buttonLink: c.buttonLink,
+    image: c.image,
+  };
+}
+
+export async function saveCommunityValue(field: string, value: string | boolean | null): Promise<void> {
+  const current = await getCommunityContentForAdmin();
+  const next = { ...current };
+  if (field === "heading") next.heading = str(value) || current.heading;
+  if (field === "headingHighlight") next.headingHighlight = str(value) || current.headingHighlight;
+  if (field === "description") next.description = str(value);
+  if (field === "buttonLink") next.buttonLink = str(value) || current.buttonLink;
+  if (field === "image") next.image = str(value) || current.image;
+  await updateCommunityContent(next);
+}
+
 // ── Registry ──────────────────────────────────────────────────────────
 export const entities: Record<string, EntityConfig> = {
   h: heroEntity,
@@ -482,5 +514,6 @@ export const mainMenu: { key: string; label: string }[] = [
   { key: "t", label: "💪 Тренировки" },
   { key: "gi", label: "🖼 Галерея" },
   { key: "a", label: "📰 Padel Journal" },
+  { key: "community", label: "🤝 Сообщество" },
   { key: "seo", label: "⚙️ SEO" },
 ];

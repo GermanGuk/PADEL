@@ -7,6 +7,7 @@ import {
   addItemConversation,
   editFieldConversation,
   performDelete,
+  showCommunity,
   showDeleteConfirm,
   showItem,
   showList,
@@ -88,6 +89,11 @@ export function getBot(): Bot<MyContext> {
     if (data === "seo") {
       await ctx.answerCallbackQuery();
       await showSettings(ctx);
+      return;
+    }
+    if (data === "community") {
+      await ctx.answerCallbackQuery();
+      await showCommunity(ctx);
       return;
     }
     if (action === "l") {

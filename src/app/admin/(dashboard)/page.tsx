@@ -6,6 +6,7 @@ const CARDS = [
   { href: "/admin/training", label: "Тренировки", desc: "Тарифы и пакеты тренировок" },
   { href: "/admin/gallery", label: "Галерея", desc: "Фото на сайте по категориям" },
   { href: "/admin/journal", label: "Журнал", desc: "Статьи блога и их категории" },
+  { href: "/admin/community", label: "Сообщество", desc: "Заголовок, описание, ссылка и фото" },
   { href: "/admin/seo", label: "SEO", desc: "Заголовок, описание и favicon сайта" },
 ];
 

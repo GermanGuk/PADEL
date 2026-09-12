@@ -64,6 +64,14 @@ export type DbHeroCard = {
   sortOrder: number;
 };
 
+export type DbCommunityContent = {
+  heading: string;
+  headingHighlight: string;
+  description: string;
+  buttonLink: string;
+  image: string;
+};
+
 export type DbSettings = {
   seoTitle: string;
   seoDescription: string;

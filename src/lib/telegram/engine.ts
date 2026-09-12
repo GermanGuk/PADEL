@@ -3,7 +3,17 @@ import { revalidatePath } from "next/cache";
 import { InlineKeyboard, type Context } from "grammy";
 import type { Conversation } from "@grammyjs/conversations";
 import { saveUploadedBuffer } from "@/lib/upload";
-import { entities, categoryLinks, mainMenu, settingsFields, getSettingsValues, saveSettingsValue } from "./entities";
+import {
+  entities,
+  categoryLinks,
+  mainMenu,
+  settingsFields,
+  getSettingsValues,
+  saveSettingsValue,
+  communityFields,
+  getCommunityValues,
+  saveCommunityValue,
+} from "./entities";
 import type { EntityValues, FieldSpec, MyContext } from "./types";
 
 // The homepage is statically cached; bot writes need to bust that cache the
@@ -12,9 +22,11 @@ function revalidateSite() {
   revalidatePath("/");
 }
 
+const SINGLETONS = new Set(["seo", "community"]);
+
 export function mainMenuKeyboard(): InlineKeyboard {
   const kb = new InlineKeyboard();
-  for (const item of mainMenu) kb.text(item.label, item.key === "seo" ? "seo" : `l:${item.key}`).row();
+  for (const item of mainMenu) kb.text(item.label, SINGLETONS.has(item.key) ? item.key : `l:${item.key}`).row();
   return kb;
 }
 
@@ -109,6 +121,26 @@ export async function showSettings(ctx: Context) {
   }
 }
 
+// ── Сообщество (singleton, no list) ──────────────────────────────────
+export async function showCommunity(ctx: Context) {
+  const values = await getCommunityValues();
+  const kb = new InlineKeyboard();
+  for (const field of communityFields) kb.text(`✏️ ${field.label}`, `e:community:_:${field.key}`).row();
+  kb.text("🔙 Меню", "m").row();
+
+  const caption = [
+    `${values.heading} ${values.headingHighlight}`,
+    String(values.description ?? ""),
+    `Кнопка: ${values.buttonLink}`,
+  ].join("\n");
+
+  if (values.image) {
+    await ctx.replyWithPhoto(String(values.image), { caption, reply_markup: kb });
+  } else {
+    await ctx.reply(caption, { reply_markup: kb });
+  }
+}
+
 // ── Field prompting, shared by "add" and "edit one field" ───────────
 async function promptField(
   conversation: Conversation<MyContext>,
@@ -195,6 +227,20 @@ export async function editFieldConversation(
     });
     await ctx.reply("✅ Сохранено.");
     await showSettings(ctx);
+    return;
+  }
+
+  if (key === "community") {
+    const field = communityFields.find((f) => f.key === fieldKey);
+    if (!field) return;
+    const values = await conversation.external(() => getCommunityValues());
+    const newValue = await promptField(conversation, ctx, field, values[fieldKey]);
+    await conversation.external(async () => {
+      await saveCommunityValue(fieldKey, newValue);
+      revalidateSite();
+    });
+    await ctx.reply("✅ Сохранено.");
+    await showCommunity(ctx);
     return;
   }
 

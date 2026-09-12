@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { communityBubbles, communityStats, siteLinks, siteTexts as fallbackTexts, type SiteTexts } from "@/lib/content";
+import { communityBubbles, communityStats } from "@/lib/content";
+import type { DbCommunityContent } from "@/lib/db-types";
 import { Parallax } from "./ui/Parallax";
 import { Reveal } from "./ui/Reveal";
 import { SectionLabel } from "./ui/SectionLabel";
@@ -10,7 +11,7 @@ const BUBBLE_POSITIONS = [
   { top: "68%", left: "40%" },
 ];
 
-export function Community({ texts = fallbackTexts }: { texts?: SiteTexts }) {
+export function Community({ content }: { content: DbCommunityContent }) {
   return (
     <section id="community" className="container-page section-pad">
       <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
@@ -18,12 +19,14 @@ export function Community({ texts = fallbackTexts }: { texts?: SiteTexts }) {
           <div className="flex flex-col gap-2">
             <SectionLabel>Сообщество</SectionLabel>
             <h2 className="h2-fluid font-extrabold text-ink">
-              {texts["community.heading"]} <span className="text-grey-2">{texts["community.headingHighlight"]}</span>
+              {content.heading} <span className="text-grey-2">{content.headingHighlight}</span>
             </h2>
           </div>
-          <p className="max-w-[445px] text-sm text-grey-1">{texts["community.description"]}</p>
+          <p className="max-w-[445px] text-sm text-grey-1">{content.description}</p>
           <a
-            href={siteLinks.telegram}
+            href={content.buttonLink}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex w-fit items-center gap-2 rounded-full bg-lime-bright px-5 py-3 text-sm font-medium text-ink transition-transform hover:scale-[1.03]"
           >
             <Image src="/images/icons/telegram-fill-2.svg" alt="" width={12} height={11} />
@@ -35,11 +38,12 @@ export function Community({ texts = fallbackTexts }: { texts?: SiteTexts }) {
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[18px] sm:aspect-[16/10]">
             <Parallax strength={26} className="absolute inset-0">
               <Image
-                src="/images/community/photo.png"
+                src={content.image}
                 alt="Игроки в падел общаются на корте"
                 fill
                 sizes="(min-width: 1024px) 60vw, 100vw"
                 className="scale-110 object-cover"
+                unoptimized={content.image.startsWith("http")}
               />
             </Parallax>
 

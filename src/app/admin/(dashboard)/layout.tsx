@@ -10,6 +10,7 @@ const NAV = [
   { href: "/admin/training", label: "Тренировки" },
   { href: "/admin/gallery", label: "Галерея" },
   { href: "/admin/journal", label: "Журнал" },
+  { href: "/admin/community", label: "Сообщество" },
   { href: "/admin/seo", label: "SEO" },
 ];
 
