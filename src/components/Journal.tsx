@@ -68,7 +68,7 @@ export function Journal({ articles, categories }: JournalProps) {
           <RevealItem key={article.id} className="group w-full sm:w-auto">
             <Link
               href={`/journal/${article.slug}`}
-              className="relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-[14px] p-5 sm:aspect-[16/11]"
+              className="relative flex aspect-square flex-col justify-between overflow-hidden rounded-[14px] p-5 sm:aspect-[16/11]"
             >
               <Image
                 src={article.cover}
