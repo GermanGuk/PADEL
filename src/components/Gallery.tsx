@@ -3,12 +3,13 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { GalleryImage } from "@/lib/data/gallery";
+import { siteLinks } from "@/lib/content";
 import { Reveal, RevealItem, RevealStagger } from "./ui/Reveal";
 import { SectionLabel } from "./ui/SectionLabel";
 
 type GalleryCategory = { id: string; name: string };
 
-type GalleryProps = { images: GalleryImage[]; categories: GalleryCategory[] };
+type GalleryProps = { images: GalleryImage[]; categories: GalleryCategory[]; instagramUrl?: string };
 
 const ALL = "all";
 
@@ -18,7 +19,7 @@ function chunk<T>(items: T[], size: number): T[][] {
   return rows;
 }
 
-export function Gallery({ images, categories }: GalleryProps) {
+export function Gallery({ images, categories, instagramUrl = siteLinks.instagram }: GalleryProps) {
   const [activeTab, setActiveTab] = useState(ALL);
 
   const visible = activeTab === ALL ? images : images.filter((img) => img.categoryId === activeTab);
@@ -93,11 +94,13 @@ export function Gallery({ images, categories }: GalleryProps) {
 
       <Reveal delay={0.1}>
         <a
-          href={"https://instagram.com"}
-          className="mt-8 inline-flex items-center gap-2 rounded-full border border-lime px-[18px] py-2.5 text-[13px]"
+          href={instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group mt-8 inline-flex items-center gap-2 rounded-full border border-lime px-[18px] py-2.5 text-[13px] transition-colors duration-300 hover:border-lime-bright hover:bg-lime-bright"
         >
           <span className="font-medium text-ink">Подписывайся в Instagram</span>
-          <span className="text-lime">↗</span>
+          <span className="text-lime transition-colors duration-300 group-hover:text-ink">↗</span>
         </a>
       </Reveal>
     </section>

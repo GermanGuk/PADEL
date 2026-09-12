@@ -39,7 +39,7 @@ export default async function Home() {
         <WaveDivider />
         <Games games={games} />
         <Training plans={plans} texts={texts} />
-        <Gallery images={images} categories={galleryCategories} />
+        <Gallery images={images} categories={galleryCategories} instagramUrl={settings.instagramUrl ?? undefined} />
         <Community texts={texts} />
         <Journal articles={articles} categories={journalCategories} />
       </main>
