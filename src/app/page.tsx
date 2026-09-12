@@ -7,43 +7,29 @@ import { Hero } from "@/components/Hero";
 import { Journal } from "@/components/Journal";
 import { Training } from "@/components/Training";
 import { WaveDivider } from "@/components/ui/WaveDivider";
-import { heroCards } from "@/lib/content";
 import { getArticles } from "@/lib/data/articles";
 import { getGalleryImages } from "@/lib/data/gallery";
 import { getGalleryCategories } from "@/lib/data/gallery-categories";
 import { getGameCards } from "@/lib/data/games";
+import { getHeroCards } from "@/lib/data/hero-cards";
 import { getJournalCategories } from "@/lib/data/journal-categories";
 import { getPricingPlans } from "@/lib/data/pricing";
 import { getSettings } from "@/lib/data/settings";
 import { getSiteTexts } from "@/lib/data/site-texts";
 
 export default async function Home() {
-  const [games, plans, images, galleryCategories, articles, journalCategories, texts, settings] = await Promise.all([
-    getGameCards(),
-    getPricingPlans(),
-    getGalleryImages(),
-    getGalleryCategories(),
-    getArticles(),
-    getJournalCategories(),
-    getSiteTexts(),
-    getSettings(),
-  ]);
-
-  // The Hero's "featured game" tile mirrors whichever game is marked
-  // `featured` in /admin/games, so the owner only edits it in one place.
-  const featuredGame = games.find((g) => g.featured);
-  const cards = featuredGame
-    ? heroCards.map((card) =>
-        card.featured
-          ? {
-              ...card,
-              title: featuredGame.title,
-              meta: featuredGame.meta.find((m) => m.icon === "clock")?.text ?? card.meta,
-              image: featuredGame.image ?? card.image,
-            }
-          : card
-      )
-    : heroCards;
+  const [cards, games, plans, images, galleryCategories, articles, journalCategories, texts, settings] =
+    await Promise.all([
+      getHeroCards(),
+      getGameCards(),
+      getPricingPlans(),
+      getGalleryImages(),
+      getGalleryCategories(),
+      getArticles(),
+      getJournalCategories(),
+      getSiteTexts(),
+      getSettings(),
+    ]);
 
   return (
     <>

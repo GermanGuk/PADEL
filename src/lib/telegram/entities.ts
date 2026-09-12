@@ -32,12 +32,72 @@ import {
   renameJournalCategory,
 } from "@/lib/data/journal-categories";
 import { getSettings, updateSettings } from "@/lib/data/settings";
+import {
+  createHeroCard,
+  deleteHeroCard,
+  getHeroCardsForAdmin,
+  updateHeroCard,
+} from "@/lib/data/hero-cards";
 import { slugify } from "@/lib/slug";
-import type { DbArticle, DbGame, DbGalleryImage, DbTrainingPlan, GameMeta, PricingRow } from "@/lib/db-types";
+import type {
+  DbArticle,
+  DbGame,
+  DbGalleryImage,
+  DbHeroCard,
+  DbTrainingPlan,
+  GameMeta,
+  PricingRow,
+} from "@/lib/db-types";
 import type { EntityConfig, EntityItem, EntityValues, FieldSpec } from "./types";
 
 const str = (v: unknown) => (typeof v === "string" ? v : v == null ? "" : String(v));
 const orNull = (v: unknown) => (v === "" || v == null ? null : String(v));
+
+// ── Первый экран (карточки на верху сайта) ───────────────────────────
+const heroEntity: EntityConfig = {
+  key: "h",
+  title: "Первый экран",
+  fields: [
+    { key: "tag", label: "Тег (подпись сверху)", type: "text" },
+    { key: "title", label: "Заголовок", type: "text" },
+    { key: "meta", label: "Доп. текст", type: "text", optional: true },
+    { key: "image", label: "Фото", type: "photo", folder: "hero" },
+    { key: "featured", label: "Крупная карточка", type: "boolean" },
+  ],
+  list: async () => (await getHeroCardsForAdmin()) as unknown as EntityItem[],
+  summary: (item) => `${item.featured ? "⭐ " : ""}${str(item.title)}`,
+  detail: (item) => {
+    const c = item as unknown as DbHeroCard;
+    return [c.tag, c.title, c.meta ?? ""].filter(Boolean).join("\n");
+  },
+  photoOf: (item) => (item as unknown as DbHeroCard).image,
+  valuesOf: (item) => {
+    const c = item as unknown as DbHeroCard;
+    return { tag: c.tag, title: c.title, meta: c.meta, image: c.image, featured: c.featured };
+  },
+  create: async (values) => {
+    const list = await getHeroCardsForAdmin();
+    await createHeroCard(buildHeroPayload(values, "#top", list.length));
+  },
+  update: async (id, values) => {
+    const list = await getHeroCardsForAdmin();
+    const current = list.find((c) => c.id === id);
+    await updateHeroCard(id, buildHeroPayload(values, current?.href ?? "#top", current?.sortOrder ?? 0));
+  },
+  remove: (id) => deleteHeroCard(id).then(() => undefined),
+};
+
+function buildHeroPayload(values: EntityValues, href: string, sortOrder: number): Omit<DbHeroCard, "id"> {
+  return {
+    tag: str(values.tag),
+    title: str(values.title),
+    meta: orNull(values.meta),
+    image: str(values.image),
+    href,
+    featured: Boolean(values.featured),
+    sortOrder,
+  };
+}
 
 // ── Игры и турниры ───────────────────────────────────────────────────
 const gamesEntity: EntityConfig = {
@@ -404,6 +464,7 @@ export async function saveSettingsValue(field: string, value: string | boolean |
 
 // ── Registry ──────────────────────────────────────────────────────────
 export const entities: Record<string, EntityConfig> = {
+  h: heroEntity,
   g: gamesEntity,
   t: trainingEntity,
   gi: galleryEntity,
@@ -416,6 +477,7 @@ export const entities: Record<string, EntityConfig> = {
 export const categoryLinks: Record<string, string> = { gi: "gc", a: "jc" };
 
 export const mainMenu: { key: string; label: string }[] = [
+  { key: "h", label: "🏠 Первый экран" },
   { key: "g", label: "🎾 Игры и турниры" },
   { key: "t", label: "💪 Тренировки" },
   { key: "gi", label: "🖼 Галерея" },

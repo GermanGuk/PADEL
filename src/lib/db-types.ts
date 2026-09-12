@@ -53,6 +53,17 @@ export type DbArticle = {
   sortOrder: number;
 };
 
+export type DbHeroCard = {
+  id: string;
+  tag: string;
+  title: string;
+  meta: string | null;
+  image: string;
+  href: string;
+  featured: boolean;
+  sortOrder: number;
+};
+
 export type DbSettings = {
   seoTitle: string;
   seoDescription: string;

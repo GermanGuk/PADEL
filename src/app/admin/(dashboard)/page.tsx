@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 const CARDS = [
+  { href: "/admin/hero", label: "Первый экран", desc: "Карточки на самом верху сайта" },
   { href: "/admin/games", label: "Игры и турниры", desc: "Расписание ближайших игр и турниров" },
   { href: "/admin/training", label: "Тренировки", desc: "Тарифы и пакеты тренировок" },
   { href: "/admin/gallery", label: "Галерея", desc: "Фото на сайте по категориям" },
