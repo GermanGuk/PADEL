@@ -13,9 +13,9 @@ export function WaveDivider() {
             <stop offset="100%" stopColor="#516b1a" />
           </linearGradient>
           <radialGradient id="wave-ball-grad" cx="35%" cy="30%" r="75%">
-            <stop offset="0%" stopColor="#fff6b0" />
-            <stop offset="55%" stopColor="#e8d94a" />
-            <stop offset="100%" stopColor="#a98f1a" />
+            <stop offset="0%" stopColor="#d9f26b" />
+            <stop offset="55%" stopColor="#c2e23c" />
+            <stop offset="100%" stopColor="#8fac22" />
           </radialGradient>
         </defs>
         <path
