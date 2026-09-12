@@ -16,14 +16,15 @@ export function Hero({ cards = heroCards, texts = fallbackTexts }: HeroProps) {
         <h1 className="hero-h1 max-w-[1200px] font-extrabold text-ink">
           {texts["hero.title.line1"]}
           <br />
-          {texts["hero.title.line2"]}
+          <span className="lg:hidden">и превращает игру</span>
+          <span className="hidden lg:inline">{texts["hero.title.line2"]}</span>
           <br />
           <span className="text-grey-2">{texts["hero.title.line3"]}</span>
         </h1>
 
         <div className="flex w-full max-w-[1470px] flex-col gap-4 text-sm text-grey-1 sm:flex-row sm:justify-between sm:text-left">
           <p className="whitespace-pre-line">{texts["hero.subtitle.left"]}</p>
-          <p className="whitespace-pre-line sm:text-right">{texts["hero.subtitle.right"]}</p>
+          <p className="hidden whitespace-pre-line lg:block lg:text-right">{texts["hero.subtitle.right"]}</p>
         </div>
       </Reveal>
 

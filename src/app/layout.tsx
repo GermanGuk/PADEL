@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { CursorDot } from "@/components/ui/CursorDot";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { getSettings } from "@/lib/data/settings";
 import "./globals.css";
 
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ru" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-cream text-ink font-sans">
+        <LoadingScreen />
         {children}
         <CursorDot />
       </body>
