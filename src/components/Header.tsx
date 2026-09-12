@@ -57,6 +57,8 @@ export function Header({ telegramUrl = siteLinks.telegram }: HeaderProps) {
 
           <a
             href={telegramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full bg-lime-bright px-[18px] py-2.5 text-sm font-medium text-ink transition-transform hover:scale-[1.03]"
           >
             <Image src="/images/icons/telegram-fill.svg" alt="" width={12} height={11} />
@@ -104,6 +106,8 @@ export function Header({ telegramUrl = siteLinks.telegram }: HeaderProps) {
               ))}
               <a
                 href={telegramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setOpen(false)}
                 className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-lime-bright px-5 py-2.5 text-sm font-medium text-ink"
               >

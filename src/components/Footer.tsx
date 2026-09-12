@@ -26,6 +26,11 @@ export function Footer({
     { key: "telegram", href: telegramUrl },
     { key: "whatsapp", href: whatsappUrl },
   ];
+  const socialUrl: Record<string, string> = {
+    instagram: instagramUrl,
+    telegram: telegramUrl,
+    whatsapp: whatsappUrl,
+  };
 
   return (
     <footer id="footer" className="container-page flex flex-col gap-7 overflow-hidden pt-12">
@@ -56,12 +61,30 @@ export function Footer({
           <div className="flex flex-col gap-3.5">
             <p className="text-[11px] font-bold tracking-[0.5px] text-lime">КОНТАКТЫ</p>
             <div className="flex flex-col gap-2.5">
-              {footerContacts.map((c) => (
-                <div key={c.label} className="flex items-center gap-2.5">
-                  <Image src={CONTACT_ICONS[c.icon]} alt="" width={14} height={16} className="h-4 w-3.5 object-contain" />
-                  <span className="text-sm font-semibold text-ink">{c.label}</span>
-                </div>
-              ))}
+              {footerContacts.map((c) => {
+                const href = socialUrl[c.icon];
+                const content = (
+                  <>
+                    <Image src={CONTACT_ICONS[c.icon]} alt="" width={14} height={16} className="h-4 w-3.5 object-contain" />
+                    <span className="text-sm font-semibold text-ink">{c.label}</span>
+                  </>
+                );
+                return href ? (
+                  <a
+                    key={c.label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 transition-opacity hover:opacity-70"
+                  >
+                    {content}
+                  </a>
+                ) : (
+                  <div key={c.label} className="flex items-center gap-2.5">
+                    {content}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -75,6 +98,8 @@ export function Footer({
               <a
                 key={s.key}
                 href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex size-[68px] items-center justify-center rounded-full border border-line transition-colors hover:border-ink"
               >
                 <Image src={CONTACT_ICONS[s.key]} alt="" width={12} height={20} className="h-8 w-6 object-contain brightness-0" />
