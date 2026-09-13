@@ -78,56 +78,60 @@ export function getBot(): Bot<MyContext> {
   });
 
   bot.on("callback_query:data", async (ctx) => {
+    // A failed/expired ack (cold start, slow network, old button) must not
+    // block the actual action — the tap already told us what to do.
+    const ack = () => ctx.answerCallbackQuery().catch(() => {});
+
     const data = ctx.callbackQuery.data;
     const [action, key, id, field] = data.split(":");
 
     if (action === "m") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await showMainMenu(ctx);
       return;
     }
     if (data === "seo") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await showSettings(ctx);
       return;
     }
     if (data === "community") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await showCommunity(ctx);
       return;
     }
     if (action === "l") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await showList(ctx, key);
       return;
     }
     if (action === "i") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await showItem(ctx, key, id);
       return;
     }
     if (action === "d") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await showDeleteConfirm(ctx, key, id);
       return;
     }
     if (action === "dy") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await performDelete(ctx, key, id);
       return;
     }
     if (action === "a") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await ctx.conversation.enter("addItem", key);
       return;
     }
     if (action === "e") {
-      await ctx.answerCallbackQuery();
+      await ack();
       await ctx.conversation.enter("editField", key, id, field);
       return;
     }
 
-    await ctx.answerCallbackQuery();
+    await ack();
   });
 
   botInstance = bot;

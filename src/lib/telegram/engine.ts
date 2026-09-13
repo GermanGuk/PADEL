@@ -22,6 +22,16 @@ function revalidateSite() {
   revalidatePath("/");
 }
 
+// Telegram's sendPhoto needs a real HTTP(S) URL (or a file upload) — it
+// rejects the "/images/..." relative paths our seed data and content.ts
+// fallbacks use. Uploaded photos are already absolute Supabase Storage
+// URLs and pass through unchanged.
+function toAbsoluteUrl(path: string): string {
+  if (/^https?:\/\//.test(path)) return path;
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
 const SINGLETONS = new Set(["seo", "community"]);
 
 export function mainMenuKeyboard(): InlineKeyboard {
@@ -75,7 +85,7 @@ export async function showItem(ctx: Context, key: string, id: string) {
   const photo = entity.photoOf?.(item);
 
   if (photo) {
-    await ctx.replyWithPhoto(photo, { caption: text, reply_markup: kb });
+    await ctx.replyWithPhoto(toAbsoluteUrl(photo), { caption: text, reply_markup: kb });
   } else {
     await ctx.reply(text, { reply_markup: kb });
   }
@@ -112,7 +122,7 @@ export async function showSettings(ctx: Context) {
     `WhatsApp: ${values.whatsappUrl || "—"}`,
   ];
   if (values.faviconUrl) {
-    await ctx.replyWithPhoto(String(values.faviconUrl), {
+    await ctx.replyWithPhoto(toAbsoluteUrl(String(values.faviconUrl)), {
       caption: lines.join("\n"),
       reply_markup: kb,
     });
@@ -135,7 +145,7 @@ export async function showCommunity(ctx: Context) {
   ].join("\n");
 
   if (values.image) {
-    await ctx.replyWithPhoto(String(values.image), { caption, reply_markup: kb });
+    await ctx.replyWithPhoto(toAbsoluteUrl(String(values.image)), { caption, reply_markup: kb });
   } else {
     await ctx.reply(caption, { reply_markup: kb });
   }
@@ -152,7 +162,7 @@ async function promptField(
     const kb = new InlineKeyboard().text("Да", "v:yes").text("Нет", "v:no");
     await ctx.reply(`${field.label}?`, { reply_markup: kb });
     const cbCtx = await conversation.waitForCallbackQuery(["v:yes", "v:no"]);
-    await cbCtx.answerCallbackQuery();
+    await cbCtx.answerCallbackQuery().catch(() => {});
     return cbCtx.callbackQuery.data === "v:yes";
   }
 
@@ -167,7 +177,7 @@ async function promptField(
     }
     await ctx.reply(`${field.label}:`, { reply_markup: kb });
     const cbCtx = await conversation.waitFor("callback_query:data");
-    await cbCtx.answerCallbackQuery();
+    await cbCtx.answerCallbackQuery().catch(() => {});
     const val = cbCtx.callbackQuery.data.slice(2);
     return val === "__none__" ? null : val;
   }
