@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { gameCards, galleryImages, type GameCard as GameCardType, type GameCardMeta } from "@/lib/content";
 import { GameCard } from "./GameCard";
@@ -23,6 +26,9 @@ function MetaRow({ item, light }: { item: GameCardMeta; light: boolean }) {
 
 export function Games({ games = gameCards }: { games?: GameCardType[] }) {
   const [featured, ...rest] = games;
+  // Only one non-featured card can show its photo at a time on mobile
+  // (tap toggles it, tapping another closes the previous one).
+  const [revealedIndex, setRevealedIndex] = useState<number | null>(null);
 
   return (
     <section id="games" className="container-page section-pad">
@@ -73,7 +79,12 @@ export function Games({ games = gameCards }: { games?: GameCardType[] }) {
             key={card.title}
             className="lg:basis-0 lg:shrink lg:grow lg:transition-[flex-grow] lg:duration-1000 lg:ease-in-out lg:hover:grow-[1.8]"
           >
-            <GameCard card={card} image={galleryImages[i % galleryImages.length]} />
+            <GameCard
+              card={card}
+              image={galleryImages[i % galleryImages.length]}
+              revealed={revealedIndex === i}
+              onToggle={() => setRevealedIndex((cur) => (cur === i ? null : i))}
+            />
           </RevealItem>
         ))}
       </RevealStagger>

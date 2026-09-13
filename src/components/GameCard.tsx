@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import type { GameCard as GameCardType, GameCardMeta } from "@/lib/content";
 import { ArrowButton } from "./ui/ArrowButton";
 
@@ -46,16 +45,21 @@ function MetaRow({ item, revealed }: { item: GameCardMeta; revealed: boolean }) 
   );
 }
 
-export function GameCard({ card, image }: { card: GameCardType; image: string }) {
-  const [revealed, setRevealed] = useState(false);
+type GameCardProps = {
+  card: GameCardType;
+  image: string;
+  revealed: boolean;
+  onToggle: () => void;
+};
 
+export function GameCard({ card, image, revealed, onToggle }: GameCardProps) {
   return (
     <div
       className="group relative flex h-full min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl bg-surface p-[18px]"
       onClick={() => {
         // Desktop already reveals the photo on hover — tapping is a mobile-only affordance.
         if (window.matchMedia("(min-width: 1024px)").matches) return;
-        setRevealed((v) => !v);
+        onToggle();
       }}
     >
       <div
